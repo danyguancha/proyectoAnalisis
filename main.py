@@ -21,17 +21,85 @@ def cargarArchivo(file):
         node_id = nodeData["id"]
         for link in nodeData["linkedTo"]:
             linked_node_id = link["nodeId"]
+            # Asignar un color diferente a cada arista basado en el peso
+            edge_color = asignarColorArista(link["weight"])
             edges.append(Edge(source=node_id, target=linked_node_id, 
                               weight=link["weight"], label=str(link["weight"]), 
-                              width=3, color="red"))
+                              width=3, color=edge_color))
             if not any(node.id == linked_node_id for node in nodes):
                 nodes.append(Node(id=linked_node_id, size=20, label=str(linked_node_id), type="circle", color="blue"))
 
     return nodes, edges
 
+def cargarGrafo():
+    file = st.file_uploader("Cargar archivo JSON", type=["json"])
+    if file is not None:
+        st.session_state.nodes, st.session_state.edges = cargarArchivo(file)
+        st.session_state.grafo_cargado = True
+
+def asignarColorArista(peso):
+    if peso >= 0 and peso <= 50:
+        return "red"
+    elif peso > 50 and peso <= 100:
+        return "blue"
+    elif peso > 100 and peso <= 150:
+        return "green"
+    elif  peso > 150 and peso <= 200:
+        return "orange"
+    elif peso > 200 and peso <= 250:
+        return "purple"
+    else:
+        return "gray"
+
+def agregarNodo():
+    all_possible_ids = set(range(1, 1000))
+    existing_ids = set([node.id for node in st.session_state.nodes])
+    available_ids = list(all_possible_ids - existing_ids)
+    idNodo = st.sidebar.selectbox("ID del nodo", available_ids)
+    if st.sidebar.button("Agregar Nodo"):
+        nuevo_nodo = Node(id=idNodo, size=20, label=str(idNodo), type="circle", color="purple")
+        st.session_state.nodes.append(nuevo_nodo)
+        
+def cambiarColorNodo():
+    # Crear un selectbox para seleccionar el nodo
+    selected_node_label = st.sidebar.selectbox("Seleccionar Nodo:", [node.label for node in st.session_state.nodes])
+
+    #Se obtiene el color seleccionado por el usuario
+    selected_color = st.sidebar.color_picker("Seleccionar Color", "#ff0000") #Color por defecto
+
+    # Crear un botón para cambiar el color del nodo seleccionado
+    if st.sidebar.button("Cambiar Color"):
+        selected_node = next((node for node in st.session_state.nodes if node.label == selected_node_label), None)
+        if selected_node:
+            selected_node.color = selected_color
+        else:
+            st.warning("No se ha seleccionado ningún nodo.")
+
+def eliminarNodo():
+    selectedNodoEliminar = st.sidebar.selectbox("Eliminar Nodo:", [node.label for node in st.session_state.nodes])
+            
+    if st.sidebar.button("Eliminar Nodo"):
+        # Lógica para eliminar el nodo seleccionado
+        nodoEliminar = next((node for node in st.session_state.nodes if node.label == selectedNodoEliminar), None)
+        if nodoEliminar:
+            st.session_state.nodes.remove(nodoEliminar)
+        else:
+            st.warning("No se ha seleccionado ningún nodo.")
+            
+# =================Aristas=================
+def agregarArista():
+    source_node_id = st.sidebar.selectbox("Nodo de inicio", [node.id for node in st.session_state.nodes])
+    target_node_id = st.sidebar.selectbox("Nodo de destino", [node.id for node in st.session_state.nodes])
+    weight = st.sidebar.number_input("Peso", min_value=1, max_value=100, value=1)
+    if st.sidebar.button("Agregar Arista"):
+        
+        nueva_arista = Edge(source=source_node_id, target=target_node_id, weight=weight, label=str(weight), width=3, color="orange")
+        st.session_state.edges.append(nueva_arista)
+
 def main():
 
     with st.sidebar:
+        
         selected = option_menu(
             menu_title="App",
             options=["Archivo", "Editar", "Ejecutar", "Herramientas", "Ventana", "Ayuda"],
@@ -51,9 +119,8 @@ def main():
                     ["Personalizado", "Aleatorio"]
                 )
             elif selected_option == "Abrir":
-                file = st.file_uploader("Cargar archivo JSON", type=["json"])
-                if file is not None:
-                    st.session_state.nodes, st.session_state.edges = cargarArchivo(file)
+                cargarGrafo()
+                
             elif selected_option == "Exportar Datos":
                 selected_sub_option = st.selectbox(
                     "Formato a exportar:",
@@ -61,60 +128,25 @@ def main():
                 )
 
 
-             
+            
         elif selected == "Editar":
 
             selected_option = st.selectbox(
                 "Seleccionar opción:",
                 ["Deshacer", "Nodo", "Arco", "Guardar", "Guardar Como", "Exportar Datos", "Importar Datos", "Salir"]
             )
-            
-
-            # Sidebar para el menú
-            st.sidebar.header("Nodos")
-            all_possible_ids = set(range(1, 101))
-            existing_ids = set([node.id for node in st.session_state.nodes])
-            available_ids = list(all_possible_ids - existing_ids)
-            idNodo = st.sidebar.selectbox("ID del nodo", available_ids)
-            if st.sidebar.button("Agregar Nodo"):
-                nuevo_nodo = Node(id=idNodo, size=20, label="Nuevo Nodo", type="circle", color="purple")
-                st.session_state.nodes.append(nuevo_nodo)
-            
-
-            # Crear un selectbox para seleccionar el nodo
-            selected_node_label = st.sidebar.selectbox("Seleccionar Nodo:", [node.label for node in st.session_state.nodes])
-
-            #Se obtiene el color seleccionado por el usuario
-            selected_color = st.sidebar.color_picker("Seleccionar Color", "#ff0000") #Color por defecto
-
-            # Crear un botón para cambiar el color del nodo seleccionado
-            if st.sidebar.button("Cambiar Color"):
-                selected_node = next((node for node in st.session_state.nodes if node.label == selected_node_label), None)
-                if selected_node:
-                    selected_node.color = selected_color
-                else:
-                    st.warning("No se ha seleccionado ningún nodo.")
-
-            # Crear un botón para eliminar el último nodo
-            selectedNodoEliminar = st.sidebar.selectbox("Eliminar Nodo:", [node.label for node in st.session_state.nodes])
-            
-            if st.sidebar.button("Eliminar Nodo"):
-                # Lógica para eliminar el nodo seleccionado
-                nodoEliminar = next((node for node in st.session_state.nodes if node.label == selectedNodoEliminar), None)
-                if nodoEliminar:
-                    st.session_state.nodes.remove(nodoEliminar)
-                else:
-                    st.warning("No se ha seleccionado ningún nodo.")
+            #=======================Seccion de nodos=======================
+            if selected_option == "Nodo":
+                st.sidebar.header("Nodos")
+                agregarNodo()
+                cambiarColorNodo()
+                eliminarNodo()
                     
+            #=======================Seccion de arcos=======================
+            elif selected_option == "Arco":
+                st.sidebar.header("Aristas")
+                agregarArista()
             
-            st.sidebar.header("Aristas")
-            source_node_id = st.sidebar.selectbox("Nodo de inicio", [node.id for node in st.session_state.nodes])
-            target_node_id = st.sidebar.selectbox("Nodo de destino", [node.id for node in st.session_state.nodes])
-            weight = st.sidebar.number_input("Peso", min_value=1, max_value=100, value=1)
-            if st.sidebar.button("Agregar Arista"):
-                
-                nueva_arista = Edge(source=source_node_id, target=target_node_id, weight=weight, label=str(weight), width=3, color="orange")
-                st.session_state.edges.append(nueva_arista)
         
         elif selected == "Ejecutar":
             selected_option = option_menu(
@@ -139,14 +171,14 @@ def main():
                 "Seleccionar opción:",
                 ["Ayuda", "Acerca de Grafos"]
             )
-    
+        
     # Navbar
     st.title("Proyecto de Análisis de Algoritmos")
-
-    
-    
-    # Renderizar el grafo en el cuerpo principal
-    agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui())
+    if "nodes" not in st.session_state:
+        st.warning("No se ha cargado ningún archivo.")
+    else:
+        # Renderizar el grafo en el cuerpo principal
+        agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui())
 
 if __name__ == "__main__":
     main()
