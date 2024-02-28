@@ -3,11 +3,13 @@ from streamlit_agraph import agraph, Node, Edge, Config
 from streamlit_option_menu import option_menu
 from GUI import Gui
 from lector.LectorArchivo import LectorArchivo
+from logica.LogNodo import LogNodo
+from logica.LogArista import LogArista
+import json
 
 # Función para cargar el grafo desde el archivo y almacenar en la caché
 @st.cache_data()
 def cargarArchivo(file):
-    #grafo = LectorArchivo.cargarArchivo("E:/proyectosU/semestres/semestre-2024-1/Analisis/JSON Example.json")
     grafo = LectorArchivo.cargarArchivo(file)
     nodes = []
     edges = []
@@ -22,7 +24,7 @@ def cargarArchivo(file):
         for link in nodeData["linkedTo"]:
             linked_node_id = link["nodeId"]
             # Asignar un color diferente a cada arista basado en el peso
-            edge_color = asignarColorArista(link["weight"])
+            edge_color = LogArista().asignarColorArista(link["weight"])
             edges.append(Edge(source=node_id, target=linked_node_id, 
                               weight=link["weight"], label=str(link["weight"]), 
                               width=3, color=edge_color))
@@ -31,75 +33,47 @@ def cargarArchivo(file):
 
     return nodes, edges
 
+
 def cargarGrafo():
     file = st.file_uploader("Cargar archivo JSON", type=["json"])
     if file is not None:
         st.session_state.nodes, st.session_state.edges = cargarArchivo(file)
         st.session_state.grafo_cargado = True
 
-def asignarColorArista(peso):
-    if peso >= 0 and peso <= 50:
-        return "red"
-    elif peso > 50 and peso <= 100:
-        return "blue"
-    elif peso > 100 and peso <= 150:
-        return "green"
-    elif  peso > 150 and peso <= 200:
-        return "orange"
-    elif peso > 200 and peso <= 250:
-        return "purple"
-    else:
-        return "gray"
+#funcion para exportar el grafo en formato json
+def exportarGrafoJSON(nodes, edges):
+    grafo_json = {"nodes": [], "edges": []}
 
-def agregarNodo():
-    all_possible_ids = set(range(1, 1000))
-    existing_ids = set([node.id for node in st.session_state.nodes])
-    available_ids = list(all_possible_ids - existing_ids)
-    idNodo = st.sidebar.selectbox("ID del nodo", available_ids)
-    if st.sidebar.button("Agregar Nodo"):
-        nuevo_nodo = Node(id=idNodo, size=20, label=str(idNodo), type="circle", color="purple")
-        st.session_state.nodes.append(nuevo_nodo)
-        
-def cambiarColorNodo():
-    # Crear un selectbox para seleccionar el nodo
-    selected_node_label = st.sidebar.selectbox("Seleccionar Nodo:", [node.label for node in st.session_state.nodes])
+    for node in nodes:
+        grafo_json["nodes"].append({
+            "id": node.id,
+            "size": node.size,
+            "label": node.label,
+            "type": node.type,
+            "data": {},
+            "color": node.color
+        })
 
-    #Se obtiene el color seleccionado por el usuario
-    selected_color = st.sidebar.color_picker("Seleccionar Color", "#ff0000") #Color por defecto
+    for edge in edges:
+        grafo_json["edges"].append({
+            "source": edge.source,
+            "target": "",
+            "weight": edge.weight,
+            "label": edge.label,
+            "width": edge.width,
+            "color": edge.color
+        })
 
-    # Crear un botón para cambiar el color del nodo seleccionado
-    if st.sidebar.button("Cambiar Color"):
-        selected_node = next((node for node in st.session_state.nodes if node.label == selected_node_label), None)
-        if selected_node:
-            selected_node.color = selected_color
-        else:
-            st.warning("No se ha seleccionado ningún nodo.")
+    # Guardar el grafo en formato JSON
+    with open("grafo_exportado.json", "w") as json_file:
+        json.dump(grafo_json, json_file)
 
-def eliminarNodo():
-    selectedNodoEliminar = st.sidebar.selectbox("Eliminar Nodo:", [node.label for node in st.session_state.nodes])
-            
-    if st.sidebar.button("Eliminar Nodo"):
-        # Lógica para eliminar el nodo seleccionado
-        nodoEliminar = next((node for node in st.session_state.nodes if node.label == selectedNodoEliminar), None)
-        if nodoEliminar:
-            st.session_state.nodes.remove(nodoEliminar)
-        else:
-            st.warning("No se ha seleccionado ningún nodo.")
-            
-# =================Aristas=================
-def agregarArista():
-    source_node_id = st.sidebar.selectbox("Nodo de inicio", [node.id for node in st.session_state.nodes])
-    target_node_id = st.sidebar.selectbox("Nodo de destino", [node.id for node in st.session_state.nodes])
-    weight = st.sidebar.number_input("Peso", min_value=1, max_value=100, value=1)
-    if st.sidebar.button("Agregar Arista"):
-        
-        nueva_arista = Edge(source=source_node_id, target=target_node_id, weight=weight, label=str(weight), width=3, color="orange")
-        st.session_state.edges.append(nueva_arista)
 
 def main():
-
+    
     with st.sidebar:
-        
+        logNodo = LogNodo()
+        logArista = LogArista()
         selected = option_menu(
             menu_title="App",
             options=["Archivo", "Editar", "Ejecutar", "Herramientas", "Ventana", "Ayuda"],
@@ -110,7 +84,7 @@ def main():
             selected_option = st.selectbox(
                 "Seleccionar opción:",
                 ["Nuevo Grafo", "Abrir", "Cerrar", "Guardar", "Guardar Como", "Exportar Datos", "Importar Datos", "Salir"]
-        )
+            )
         
         
             if selected_option == "Nuevo Grafo":
@@ -126,7 +100,9 @@ def main():
                     "Formato a exportar:",
                     ["JSON", "CSV", "Excel", "Imagen"]
                 )
-
+                if selected_sub_option == "JSON":
+                    exportarGrafoJSON(st.session_state.nodes, st.session_state.edges)
+                st.sidebar.button("Exportar")
 
             
         elif selected == "Editar":
@@ -138,14 +114,16 @@ def main():
             #=======================Seccion de nodos=======================
             if selected_option == "Nodo":
                 st.sidebar.header("Nodos")
-                agregarNodo()
-                cambiarColorNodo()
-                eliminarNodo()
+                logNodo.agregarNodo(Node, st)
+                logNodo.cambiarColorNodo(st)
+                logNodo.eliminarNodo(st)
                     
             #=======================Seccion de arcos=======================
             elif selected_option == "Arco":
                 st.sidebar.header("Aristas")
-                agregarArista()
+                logArista.agregarArista(Edge, st)
+                logArista.editarArista(st)
+                logArista.eliminarArista(st)
             
         
         elif selected == "Ejecutar":
