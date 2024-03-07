@@ -2,6 +2,7 @@
 
 class LogNodo:
     
+    
     def agregarNodo(self, Node, st):
         all_possible_ids = set(range(1, 1000))
         existing_ids = set([node.id for node in st.session_state.nodes])
@@ -10,6 +11,7 @@ class LogNodo:
         if st.sidebar.button("Agregar Nodo"):
             nuevo_nodo = Node(id=idNodo, size=20, label=str(idNodo), type="circle", color="purple")
             st.session_state.nodes.append(nuevo_nodo)
+            st.success("Nodo agregado exitosamente!")
     
     def cambiarColorNodo(self, st):
         # Crear un selectbox para seleccionar el nodo
@@ -34,5 +36,18 @@ class LogNodo:
             nodoEliminar = next((node for node in st.session_state.nodes if node.label == selectedNodoEliminar), None)
             if nodoEliminar:
                 st.session_state.nodes.remove(nodoEliminar)
+            else:
+                st.warning("No se ha seleccionado ningún nodo.")
+                
+    def buscarNodo(self, st):
+        selectedNodoBuscar = st.sidebar.selectbox("Buscar Nodo:", [node.label for node in st.session_state.nodes])
+                
+        if st.sidebar.button("Buscar Nodo"):
+            # Lógica para buscar el nodo seleccionado
+            nodoBuscar = next((node for node in st.session_state.nodes if node.label == selectedNodoBuscar), None)
+            if nodoBuscar:
+                # si lo encuentra, cambia el color del nodo a verde
+                nodoBuscar.color = "green"
+                st.success("Nodo encontrado!")
             else:
                 st.warning("No se ha seleccionado ningún nodo.")
