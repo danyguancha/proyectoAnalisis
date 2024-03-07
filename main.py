@@ -4,12 +4,20 @@ import networkx as nx
 import json
 import pyautogui
 import random
+import matplotlib.pyplot as plt
+import networkx as nx
+import json
+import pyautogui
+import random
 from streamlit_agraph import agraph, Node, Edge, Config
 from streamlit_option_menu import option_menu
 from GUI import Gui
 from lector.LectorArchivo import LectorArchivo
 from logica.LogNodo import LogNodo
 from logica.LogArista import LogArista
+from PIL import Image
+#import io
+#import csv
 from logica.LogGrafo import LogGrafo
 from PIL import Image
 #import io
@@ -50,6 +58,7 @@ def cargarGrafo():
         st.session_state.grafo_cargado = True
 
 
+
 #funcion para generar el grafo aleatorio
 def generarGrafo(num_nodes: int, num_edges: int):
     G = nx.gnm_random_graph(num_nodes, num_edges)
@@ -68,6 +77,57 @@ def generarGrafo(num_nodes: int, num_edges: int):
     config = Config(width=500, height=500, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6")
     return nodes, edges, config
 
+
+#funcion para generar el grafo aleatorio
+def generarGrafo(num_nodes: int, num_edges: int):
+    G = nx.gnm_random_graph(num_nodes, num_edges)
+    
+    # Agregar etiquetas a los nodos
+    for i in range(num_nodes):
+        G.nodes[i]['label'] = f'Nodo {i+1}'
+    
+    # Agregar pesos a las aristas
+    for u, v in G.edges():
+        G.edges[u, v]['weight'] = random.randint(1, 10)
+    
+    nodes = [Node(str(i), label=G.nodes[i]['label']) for i in range(num_nodes)]
+    edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight'])) for u, v in G.edges()]
+    
+    config = Config(width=500, height=500, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6")
+    return nodes, edges, config
+
+
+
+def exportarGrafoJPG():
+    # Capturar la posición de la ventana de Streamlit
+    streamlit_window = pyautogui.getWindowsWithTitle("Streamlit")[0]
+    streamlit_x, streamlit_y = streamlit_window.topleft
+
+    # Capturar un pantallazo del área de la ventana de Streamlit
+    img = pyautogui.screenshot(region=(streamlit_x, streamlit_y, streamlit_window.width, streamlit_window.height))
+
+    # Guardar la captura de pantalla en un archivo temporal
+    img_path = "grafo_pantallazo.png"
+    img.save(img_path)
+    st.success("Captura de pantalla del grafo exportada como 'grafo_pantallazo.png'")
+
+    return img_path
+
+
+def exportarGrafoJPG():
+    # Capturar la posición de la ventana de Streamlit
+    streamlit_window = pyautogui.getWindowsWithTitle("Streamlit")[0]
+    streamlit_x, streamlit_y = streamlit_window.topleft
+
+    # Capturar un pantallazo del área de la ventana de Streamlit
+    img = pyautogui.screenshot(region=(streamlit_x, streamlit_y, streamlit_window.width, streamlit_window.height))
+
+    # Guardar la captura de pantalla en un archivo temporal
+    img_path = "grafo_pantallazo.png"
+    img.save(img_path)
+    st.success("Captura de pantalla del grafo exportada como 'grafo_pantallazo.png'")
+
+    return img_path
 
 
 def exportarGrafoJPG():
@@ -114,28 +174,6 @@ def main():
                     [" ","Personalizado", "Aleatorio"]
                 )
                 if selected_sub_option == "Aleatorio":
-                    st.session_state.nodes = []
-                    st.session_state.edges = []
-                    numNodos = st.number_input("Número de nodos", min_value=0, max_value=500, value=0)
-                    numAristas = st.number_input("Número de aristas", min_value=0, max_value=1000, value=0)
-                    
-                    s = logGrafo.generarGrafoAleatorio(numNodos, numAristas)
-                    ruta_archivo = "./Data/"
-                    nombre_archivo = "nuevoGrafo.json"
-                    nombre_completo_archivo = ruta_archivo + nombre_archivo
-                    logGrafo.guardar_grafo_json(nombre_completo_archivo)
-                    
-                    st.session_state.grafo_cargado = True
-                    for c, v in s.items():
-                        for i in v:
-                            st.session_state.edges.append(Edge(source=c, target=i, weight=3))
-                        st.session_state.nodes.append(Node(id=c, size=20, label=c, type="circle", color="blue"))
-                        
-            
-                elif selected_sub_option == "Personalizado":
-                    cargarGrafo()
-                
-                if selected_sub_option == "Aleatorio":
                         num_nodes = st.sidebar.number_input('Ingrese el número de nodos', min_value=1, value=5)
                         num_edges = st.sidebar.number_input('Ingrese el número de aristas', min_value=1, value=5)
                         nodes, edges, config = generarGrafo(num_nodes, num_edges)
@@ -158,7 +196,7 @@ def main():
                     ["JSON", "CSV", "Excel", "Imagen"]
                 )
                 if selected_sub_option == "JSON":
-                    logGrafo.exportarGrafoJSON(st.session_state.nodes, st.session_state.edges)
+                    exportarGrafoJSON(st.session_state.nodes, st.session_state.edges)
                     with open("grafo_exportado.json", "r") as json_file:
                         json_data = json_file.read()
                     st.download_button(
@@ -178,7 +216,7 @@ def main():
                             mime="image/png"
                         )
 
-           
+
             
         elif selected == "Editar":
 
@@ -234,22 +272,7 @@ def main():
     else:
         # Renderizar el grafo en el cuerpo principal
         with st.container(border=True):
-            #agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui())
-        # Renderizar el grafo en el cuerpo principal
-        graph_clicked = st.graph(agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui()))
-
-        # Obtener el nodo clickeado
-        clicked_node_id = graph_clicked["selectedNodes"][0] if graph_clicked else None
-
-        # Mostrar información del nodo clickeado
-        if clicked_node_id:
-            selected_node = next((node for node in st.session_state.nodes if node.id == clicked_node_id), None)
-            if selected_node:
-                st.sidebar.markdown(f"### Información del Nodo {selected_node.id}")
-                st.sidebar.write(f"**Label:** {selected_node.label}")
-                st.sidebar.write(f"**Tipo:** {selected_node.type}")
-                st.sidebar.write(f"**Data:** {selected_node.data}")
-                st.sidebar.write(f"**Color:** {selected_node.color}")
+            agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui())
 
 if __name__ == "__main__":
     main()
