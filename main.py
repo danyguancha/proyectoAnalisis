@@ -1,4 +1,9 @@
 import streamlit as st
+import matplotlib.pyplot as plt
+import networkx as nx
+import json
+import pyautogui
+import random
 from streamlit_agraph import agraph, Node, Edge, Config
 from streamlit_option_menu import option_menu
 from GUI import Gui
@@ -6,7 +11,9 @@ from lector.LectorArchivo import LectorArchivo
 from logica.LogNodo import LogNodo
 from logica.LogArista import LogArista
 from logica.LogGrafo import LogGrafo
-import json
+from PIL import Image
+#import io
+#import csv
 
 
 # Función para cargar el grafo desde el archivo y almacenar en la caché
@@ -43,6 +50,42 @@ def cargarGrafo():
         st.session_state.grafo_cargado = True
 
 
+#funcion para generar el grafo aleatorio
+def generarGrafo(num_nodes: int, num_edges: int):
+    G = nx.gnm_random_graph(num_nodes, num_edges)
+    
+    # Agregar etiquetas a los nodos
+    for i in range(num_nodes):
+        G.nodes[i]['label'] = f'Nodo {i+1}'
+    
+    # Agregar pesos a las aristas
+    for u, v in G.edges():
+        G.edges[u, v]['weight'] = random.randint(1, 10)
+    
+    nodes = [Node(str(i), label=G.nodes[i]['label']) for i in range(num_nodes)]
+    edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight'])) for u, v in G.edges()]
+    
+    config = Config(width=500, height=500, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6")
+    return nodes, edges, config
+
+
+
+def exportarGrafoJPG():
+    # Capturar la posición de la ventana de Streamlit
+    streamlit_window = pyautogui.getWindowsWithTitle("Streamlit")[0]
+    streamlit_x, streamlit_y = streamlit_window.topleft
+
+    # Capturar un pantallazo del área de la ventana de Streamlit
+    img = pyautogui.screenshot(region=(streamlit_x, streamlit_y, streamlit_window.width, streamlit_window.height))
+
+    # Guardar la captura de pantalla en un archivo temporal
+    img_path = "grafo_pantallazo.png"
+    img.save(img_path)
+    st.success("Captura de pantalla del grafo exportada como 'grafo_pantallazo.png'")
+
+    return img_path
+
+
 def main():
     logNodo = LogNodo()
     logArista = LogArista()
@@ -50,7 +93,7 @@ def main():
     with st.sidebar:
         
         selected = option_menu(
-            menu_title="App",
+            menu_title="App Algoritmos",
             options=["Archivo", "Editar", "Ejecutar", "Herramientas", "Ventana", "Ayuda"],
         )
         
@@ -92,6 +135,14 @@ def main():
                 elif selected_sub_option == "Personalizado":
                     cargarGrafo()
                 
+                if selected_sub_option == "Aleatorio":
+                        num_nodes = st.sidebar.number_input('Ingrese el número de nodos', min_value=1, value=5)
+                        num_edges = st.sidebar.number_input('Ingrese el número de aristas', min_value=1, value=5)
+                        nodes, edges, config = generarGrafo(num_nodes, num_edges)
+                        st.session_state.nodes = nodes
+                        st.session_state.edges = edges
+                        st.session_state.config = config
+
             elif selected_option == "Abrir":
                 cargarGrafo()
             elif selected_option == "Cerrar":
@@ -108,7 +159,25 @@ def main():
                 )
                 if selected_sub_option == "JSON":
                     logGrafo.exportarGrafoJSON(st.session_state.nodes, st.session_state.edges)
-                st.sidebar.button("Exportar")
+                    with open("grafo_exportado.json", "r") as json_file:
+                        json_data = json_file.read()
+                    st.download_button(
+                        label="Descargar archivo JSON",
+                        data=json_data,
+                        file_name="grafo_exportado.json",
+                        mime="application/json"
+                    )
+                elif selected_sub_option == "Imagen":
+                    img_path = exportarGrafoJPG()
+                    # Crear un botón de descarga
+                    with open(img_path, "rb") as img_file:
+                        st.download_button(
+                            label="Descargar Pantallazo",
+                            data=img_file,
+                            file_name="grafo_pantallazo.png",
+                            mime="image/png"
+                        )
+
            
             
         elif selected == "Editar":
@@ -164,7 +233,8 @@ def main():
         st.warning("No se ha cargado ningún archivo.")
     else:
         # Renderizar el grafo en el cuerpo principal
-        #agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui())
+        with st.container(border=True):
+            #agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui())
         # Renderizar el grafo en el cuerpo principal
         graph_clicked = st.graph(agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui()))
 
