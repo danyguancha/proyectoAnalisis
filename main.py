@@ -59,75 +59,8 @@ def cargarGrafo():
 
 
 
-#funcion para generar el grafo aleatorio
-def generarGrafo(num_nodes: int, num_edges: int):
-    G = nx.gnm_random_graph(num_nodes, num_edges)
-    
-    # Agregar etiquetas a los nodos
-    for i in range(num_nodes):
-        G.nodes[i]['label'] = f'Nodo {i+1}'
-    
-    # Agregar pesos a las aristas
-    for u, v in G.edges():
-        G.edges[u, v]['weight'] = random.randint(1, 10)
-    
-    nodes = [Node(str(i), label=G.nodes[i]['label']) for i in range(num_nodes)]
-    edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight'])) for u, v in G.edges()]
-    
-    config = Config(width=500, height=500, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6")
-    return nodes, edges, config
 
 
-#funcion para generar el grafo aleatorio
-def generarGrafo(num_nodes: int, num_edges: int):
-    G = nx.gnm_random_graph(num_nodes, num_edges)
-    
-    # Agregar etiquetas a los nodos
-    for i in range(num_nodes):
-        G.nodes[i]['label'] = f'Nodo {i+1}'
-    
-    # Agregar pesos a las aristas
-    for u, v in G.edges():
-        G.edges[u, v]['weight'] = random.randint(1, 10)
-    
-    nodes = [Node(str(i), label=G.nodes[i]['label']) for i in range(num_nodes)]
-    edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight'])) for u, v in G.edges()]
-    
-    config = Config(width=500, height=500, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6")
-    return nodes, edges, config
-
-
-
-def exportarGrafoJPG():
-    # Capturar la posición de la ventana de Streamlit
-    streamlit_window = pyautogui.getWindowsWithTitle("Streamlit")[0]
-    streamlit_x, streamlit_y = streamlit_window.topleft
-
-    # Capturar un pantallazo del área de la ventana de Streamlit
-    img = pyautogui.screenshot(region=(streamlit_x, streamlit_y, streamlit_window.width, streamlit_window.height))
-
-    # Guardar la captura de pantalla en un archivo temporal
-    img_path = "grafo_pantallazo.png"
-    img.save(img_path)
-    st.success("Captura de pantalla del grafo exportada como 'grafo_pantallazo.png'")
-
-    return img_path
-
-
-def exportarGrafoJPG():
-    # Capturar la posición de la ventana de Streamlit
-    streamlit_window = pyautogui.getWindowsWithTitle("Streamlit")[0]
-    streamlit_x, streamlit_y = streamlit_window.topleft
-
-    # Capturar un pantallazo del área de la ventana de Streamlit
-    img = pyautogui.screenshot(region=(streamlit_x, streamlit_y, streamlit_window.width, streamlit_window.height))
-
-    # Guardar la captura de pantalla en un archivo temporal
-    img_path = "grafo_pantallazo.png"
-    img.save(img_path)
-    st.success("Captura de pantalla del grafo exportada como 'grafo_pantallazo.png'")
-
-    return img_path
 
 
 def exportarGrafoJPG():
@@ -176,7 +109,7 @@ def main():
                 if selected_sub_option == "Aleatorio":
                         num_nodes = st.sidebar.number_input('Ingrese el número de nodos', min_value=1, value=5)
                         num_edges = st.sidebar.number_input('Ingrese el número de aristas', min_value=1, value=5)
-                        nodes, edges, config = generarGrafo(num_nodes, num_edges)
+                        nodes, edges, config = logGrafo.generarGrafo(num_nodes, num_edges, Node, Edge, Gui())
                         st.session_state.nodes = nodes
                         st.session_state.edges = edges
                         st.session_state.config = config
@@ -193,18 +126,14 @@ def main():
             elif selected_option == "Exportar Datos":
                 selected_sub_option = st.selectbox(
                     "Formato a exportar:",
-                    ["JSON", "CSV", "Excel", "Imagen"]
+                    [" ","JSON", "CSV", "Excel", "Imagen"]
                 )
                 if selected_sub_option == "JSON":
-                    exportarGrafoJSON(st.session_state.nodes, st.session_state.edges)
-                    with open("grafo_exportado.json", "r") as json_file:
-                        json_data = json_file.read()
-                    st.download_button(
-                        label="Descargar archivo JSON",
-                        data=json_data,
-                        file_name="grafo_exportado.json",
-                        mime="application/json"
-                    )
+                    ruta = './Data/'
+                    nombreArchivo = 'grafo_exportado.json'
+                    nombreCompleto = ruta + nombreArchivo
+                    logGrafo.exportarGrafoJson(nombreCompleto, st.session_state.nodes, st.session_state.edges,Node, st)
+                    
                 elif selected_sub_option == "Imagen":
                     img_path = exportarGrafoJPG()
                     # Crear un botón de descarga
