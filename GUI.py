@@ -1,7 +1,9 @@
 from streamlit_agraph import Config
 
-def Gui():
-    return Config(width=1000,
+def Gui(directed: bool):
+    return Config(width='100%',
                 height=700,
-                directed=False
+                directed=directed,
+                physics=False,
+                layout={"name": "cose"},
                 )

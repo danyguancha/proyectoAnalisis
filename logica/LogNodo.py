@@ -1,4 +1,6 @@
-
+import time
+from streamlit_agraph import agraph
+from GUI import Gui
 
 class LogNodo:
     
@@ -38,16 +40,21 @@ class LogNodo:
                 st.session_state.nodes.remove(nodoEliminar)
             else:
                 st.warning("No se ha seleccionado ningún nodo.")
-                
+            
     def buscarNodo(self, st):
         selectedNodoBuscar = st.sidebar.selectbox("Buscar Nodo:", [node.label for node in st.session_state.nodes])
                 
         if st.sidebar.button("Buscar Nodo"):
             # Lógica para buscar el nodo seleccionado
             nodoBuscar = next((node for node in st.session_state.nodes if node.label == selectedNodoBuscar), None)
+            
             if nodoBuscar:
                 # si lo encuentra, cambia el color del nodo a verde
+                #clr = nodoBuscar.color
                 nodoBuscar.color = "green"
                 st.success("Nodo encontrado!")
+                #nodoBuscar.color = clr
+                
             else:
                 st.warning("No se ha seleccionado ningún nodo.")
+    

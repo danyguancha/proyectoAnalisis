@@ -36,9 +36,26 @@ class LogArista:
     
     def eliminarArista(self, st):
         selectedAristaEliminar = st.sidebar.selectbox("Eliminar Arista:", [edge.label for edge in st.session_state.edges])
+        
         if st.sidebar.button("Eliminar Arista"):
             aristaEliminar = next((edge for edge in st.session_state.edges if edge.label == selectedAristaEliminar), None)
+            
             if aristaEliminar:
-                st.session_state.edges.remove(aristaEliminar)
+                color = 'rgba(254, 20, 56, 0.2)'
+                if aristaEliminar.color == color and aristaEliminar.width==4:
+                    st.warning('Esta arista ya fue eliminada anteriormente')
+                else:
+                    aristaEliminar.width = 5
+                    aristaEliminar.color = color
+                
+                #aristaEliminar.label = f'[ X, {aristaEliminar.label} ]'  # Encerramos el peso en un cuadro
+                #st.session_state.edges = st.session_state.edges  # Actualizamos las aristas
+                #st.session_state.graph = {'edges': st.session_state.edges}  # Inicializamos o actualizamos el grafo
             else:
                 st.warning("No se ha seleccionado ninguna arista.")
+            
+            
+
+
+    
+
