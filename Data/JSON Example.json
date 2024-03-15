@@ -108,5 +108,6 @@
   ],
   "generalData1": 100,
   "generalData2": "Alg",
-  "generalData3": 300
+  "generalData3": 300,
+  "directed":false
 }

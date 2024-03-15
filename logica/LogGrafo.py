@@ -22,8 +22,8 @@ class LogGrafo:
     def generarGrafoDirigido (self, numNodos:int, tipoGrafo, Node, Edge):
         if tipoGrafo == "Grafo dirigido":
             G = nx.gnm_random_graph(numNodos, numNodos, directed=True)
-        else:
-            G = nx.gnm_random_graph(numNodos, numNodos, directed=False)
+        #else:
+         #   G = nx.gnm_random_graph(numNodos, numNodos, directed=False)
         # Agregar etiquetas a los nodos
         for i in range(numNodos):
             G.nodes[i]['label'] = f'Nodo {i+1}'
@@ -33,7 +33,7 @@ class LogGrafo:
             G.edges[u, v]['weight'] = random.randint(1, 1000)
         
         nodes = [Node(str(i), label=G.nodes[i]['label']) for i in range(numNodos)]
-        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3) for u, v in G.edges()]        
+        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=True) for u, v in G.edges()]        
         return nodes, edges
     
     def generarGrafoCompleto(self, numNodos:int, tipoGrafo, Node, Edge):
@@ -50,47 +50,49 @@ class LogGrafo:
         for u, v in G.edges():
             G.edges[u, v]['weight'] = random.randint(1, 1000)
         nodes = [Node(str(i), label=G.nodes[i]['label']) for i in range(numNodos)]
-        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3) for u, v in G.edges()]
+        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=False) for u, v in G.edges()]
         return nodes, edges
     
-    def generarGrafoBipartito(self, numNodos: int, tipoGrafo, Node, Edge):
-        if tipoGrafo == 'Bipartito':
-            G = nx.complete_bipartite_graph(numNodos, numNodos)
-        else:
-            G = nx.complete_graph(numNodos)
 
-        # Agregar etiquetas a los nodos
-        for i in range(numNodos):
-            G.nodes[i]['label'] = f'Nodo {i + 1}'
-
-        # Agregar pesos a las aristas
-        for u, v in G.edges():
-            G.edges[u, v]['weight'] = random.randint(1, 1000)
-
-        nodes = [Node(str(i), label=G.nodes[i]['label']) for i in range(numNodos)]
-        
-        # Crear aristas para todos los nodos
-        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3) for u, v in G.edges()]
-        
-        return nodes, edges
-
-    
     def esCompleto(self, numNodos: int, numAristas: int) -> bool:
         return numAristas == (numNodos * (numNodos - 1)) / 2
-    
-    def esBipartito(self, numNodos: int, numAristas: int) -> bool:
-        return numAristas == numNodos * numNodos
     
     def esDirigido(self, numNodos: int, numAristas: int) -> bool:
         return numAristas == numNodos * numNodos
 
-    def exportarGrafoJson(self, nombre_archivo: str, nodes, edges, Node, st):
+    """def exportarGrafoJson(self, nombre_archivo: str, nodes, edges, Node, st):
         # Convertir la lista de nodos a una lista de diccionarios usando el método to_dict
         listaNodos = [node.to_dict() for node in nodes]
         listaAristas = [edge.to_dict() for edge in edges]
 
         # Crear un diccionario con nodos y aristas
         grafo = {"nodes": listaNodos, "edges": listaAristas}
+
+        # Guardar el grafo en un archivo JSON
+        with open(nombre_archivo, 'w') as archivo:
+            json.dump(grafo, archivo, default=self.serialize_nodes(nodes, Node), ident=4)
+
+        # Leer el archivo JSON
+        with open(nombre_archivo, "r") as json_file:
+            json_data = json_file.read()
+
+        # Botón de descarga
+        st.download_button(
+            label="Descargar JSON",
+            data=json_data,
+            file_name=nombre_archivo,
+            mime="application/json"
+        )"""
+    def exportarGrafoJson(self, nombre_archivo: str, nodes, edges, Node, st):
+        # Convertir la lista de nodos a una lista de diccionarios usando el método to_dict
+        listaNodos = [node.to_dict() for node in nodes]
+        listaAristas = [edge.to_dict() for edge in edges]
+
+        # Determinar si el grafo es dirigido o no
+        dirigido = any("directed" in edge for edge in listaAristas)
+
+        # Crear un diccionario con nodos y aristas
+        grafo = {"nodes": listaNodos, "edges": listaAristas, "directed": dirigido}
 
         # Guardar el grafo en un archivo JSON
         with open(nombre_archivo, 'w') as archivo:
@@ -108,6 +110,7 @@ class LogGrafo:
             mime="application/json"
         )
 
+   
 
     # Función para serializar los nodos
     def serialize_nodes(self,obj, Node):
@@ -120,13 +123,7 @@ class LogGrafo:
             return obj.__dict__
         return obj
 
-
-    
-
     def exportarGrafoImagen(self, st, nombre_archivo: str, formato: str = 'png'):
-        #if not st.session_state.grafo_cargado:
-         #   st.warning("No se ha cargado ningún grafo.")
-          #  return
         # Crear el grafo desde la caché de la sesión
         nodes = st.session_state.nodes
         edges = st.session_state.edges
