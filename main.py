@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import matplotlib.pyplot as plt
 import networkx as nx
+import os
 from streamlit_agraph import agraph, Node, Edge, Config
 from streamlit_option_menu import option_menu
 from GUI import Gui
@@ -100,7 +101,8 @@ def main():
                     num_nodes = st.sidebar.number_input('Ingrese el número de nodos', min_value=0, value=0)
                     selectTipo = st.selectbox("Seleccione el tipo de grafo", [" ",
                                                                                 "Grafo dirigido", 
-                                                                                "Completo",])
+                                                                                "Completo",
+                                                                                "Ponderado"])
                     if selectTipo == "Grafo dirigido":
                         nodes, edges = logGrafo.generarGrafoDirigido(num_nodes, selectTipo, Node, Edge)
                         st.session_state.nodes = nodes
@@ -131,6 +133,10 @@ def main():
                             if st.session_state.directed==True:
                                 bandera = False
                             estado = True
+
+                    elif selectTipo == "Ponderado":
+                        st.text("Opción con fallos, estará disponible muy pronto")
+
                 elif selected_sub_option == "Personalizado":
                     st.sidebar.header("Grafo Personalizado")
                     st.sidebar.header("Tipo de Grafo") 
@@ -140,7 +146,7 @@ def main():
                     elif tipo_grafo == "No dirigido":
                         bandera = False
                     st.sidebar.header("Agrega Nodo") 
-                    logNodo.agregarNodo(Node, st)
+                    logNodo.agregarNodo(Node, st, logGrafo)
                     st.sidebar.header(" Cambiar Color Nodo")
                     logNodo.cambiarColorNodo(st)
                     st.sidebar.header("Agrega Aristas") 
@@ -172,7 +178,7 @@ def main():
                 
                 selected_sub_option = st.selectbox(
                     "Formato a exportar:",
-                    [" ","JSON", "CSV", "Excel", "Imagen"]
+                    [" ", "Excel", "Imagen"]
                 )
                 if selected_sub_option == "JSON":
                     ruta = './Data/'
@@ -183,21 +189,44 @@ def main():
                     estado = True
                     
                 elif selected_sub_option == "Excel":
-                    logGrafo.exportarGrafoExcel('excel',st.session_state.nodes, st.session_state.edges, st)
+                    logGrafo.exportarGrafoExcel('datos_grafo.xlsx',st.session_state.nodes, st.session_state.edges, st)
                 elif selected_sub_option == "Imagen":
                     logGrafo.exportarGrafoImagen(st,'grafo_img')
+
+            elif selected_option == "Guardar":
+                    ruta = './Data/'
+                    nombreArchivo = 'grafo_exportado.json'
+                    nombreCompleto = ruta + nombreArchivo
+                    logGrafo.exportarGrafoJson(nombreCompleto, st.session_state.nodes, st.session_state.edges,Node, st)
+
+            elif selected_option == "Guardar Como":
+                ruta = './Data/'
+                nombreArchivo = 'grafo_exportado.json'
+                nombreUsuario = st.text_input("Nombre del archivo", value=nombreArchivo)
+
+                if not nombreUsuario.endswith('.json'):
+                    nombreUsuario += '.json'
+                    
+                nombreCompleto = os.path.join(ruta, nombreUsuario)
+
+                logGrafo.exportarGrafoJson(nombreCompleto, st.session_state.nodes, st.session_state.edges, Node, st)
+
         
         if selected == "Editar":
             selected_option = st.selectbox(
                 "Seleccionar opción:",
-                ["Deshacer", "Nodo", "Arista", "Guardar", "Guardar Como", "Importar Datos", "Salir"]
+                [" ", "Deshacer", "Nodo", "Arista"]
             )
             #=======================Seccion de nodos=======================
             if selected_option == "Deshacer":
-                pass
+                cambio = logGrafo.deshacer_cambio()
+                if cambio:
+                    st.text("Se ha deshecho el cambio")
+                else:
+                    st.text("No hay cambios que deshacer")
             elif selected_option == "Nodo":
                 st.sidebar.header("Nodos")
-                logNodo.agregarNodo(Node, st)
+                logNodo.agregarNodo(Node, st, logGrafo)
                 logNodo.cambiarEtiquetaNodo(st)
                 logNodo.cambiarColorNodo(st)
                 logNodo.eliminarNodo(st)

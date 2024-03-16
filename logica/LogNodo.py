@@ -5,7 +5,8 @@ from GUI import Gui
 class LogNodo:
     
     
-    def agregarNodo(self, Node, st):
+    def agregarNodo(self, Node, st, logGrafo):
+        
         all_possible_ids = set(range(1, 1000))
 
         if 'nodes' not in st.session_state:
@@ -16,6 +17,9 @@ class LogNodo:
         available_ids = list(all_possible_ids - existing_ids)
         idNodo = st.sidebar.selectbox("ID del nodo", available_ids)
         if st.sidebar.button("Agregar Nodo"):
+
+            logGrafo.guardar_estado()
+
             nuevo_nodo = Node(id=idNodo, size=20, label=str(idNodo), type="circle", color="purple", shape=None)
             st.session_state.nodes.append(nuevo_nodo)
             st.success("Nodo agregado exitosamente!")
