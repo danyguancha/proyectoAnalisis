@@ -18,9 +18,10 @@ def cargarArchivo(file):
     grafo = LectorArchivo.cargarArchivo(file)
     nodes = []
     edges = []
+    dirigido = grafo.get('directed', False)
     # verificar si el grafo tiene la clave graph
     if "graph" in grafo:
-        dirigido = grafo['directed']
+        #dirigido = grafo['directed']
         for nodeData in grafo["graph"][0]["data"]:
             node_id = nodeData["id"]
             nodes.append(Node(id=node_id, size=nodeData["radius"], 
@@ -42,7 +43,7 @@ def cargarArchivo(file):
                                       type="circle", color="blue"))
             
     else:
-        dirigido = grafo["directed"]
+        #dirigido = grafo["directed"]
         for nodeData in grafo["nodes"]:
             node_id = nodeData["id"]
             nodes.append(Node(id=node_id, title=nodeData["title"],
