@@ -192,7 +192,31 @@ class LogGrafo:
             file_name=nombre_archivo + '.xls',
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+    # funcion para mostrar los datos del grafo en una tabla.. por ejemplo dataframe
+    def mostrarDatosGrafoTabla(self, nodes, edges, st):
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.label)
 
+        # Crear un DataFrame con los nodos
+        df_nodes = pd.DataFrame(columns=['Node', 'Label'])
+        for node, data in G.nodes(data=True):
+            df_nodes = pd.concat([df_nodes, pd.DataFrame({'Node': [node], 'Label': [data['label']]})], ignore_index=True)
+
+        # Crear un DataFrame con las aristas
+        df_edges = pd.DataFrame(columns=['Source', 'Target', 'Weight'])
+        for u, v, w in G.edges(data='weight'):
+            df_edges = pd.concat([df_edges, pd.DataFrame({'Source': [u], 'Target': [v], 'Weight': [w]})], ignore_index=True)
+
+        # Mostrar los DataFrames en Streamlit
+        st.title('Datos de grafo en tabla')
+        st.write('Nodos')
+        st.write(df_nodes)
+        st.write('Aristas')
+        st.write(df_edges)
 
 
 

@@ -62,4 +62,14 @@ class LogNodo:
                 
             else:
                 st.warning("No se ha seleccionado ningún nodo.")
+    def cambiarEtiquetaNodo(self, st):
+        selectedNodoEtiqueta = st.sidebar.selectbox("Cambiar Etiqueta Nodo:", [node.label for node in st.session_state.nodes])
+        nuevaEtiqueta = st.sidebar.text_input("Nueva Etiqueta")
+        if st.sidebar.button("Cambiar Etiqueta"):
+            # Lógica para cambiar la etiqueta del nodo seleccionado
+            nodoEtiqueta = next((node for node in st.session_state.nodes if node.label == selectedNodoEtiqueta), None)
+            if nodoEtiqueta:
+                nodoEtiqueta.label = nuevaEtiqueta
+            else:
+                st.warning("No se ha seleccionado ningún nodo.")
     
