@@ -23,8 +23,10 @@ def cargarArchivo(file):
         dirigido = grafo['directed']
         for nodeData in grafo["graph"][0]["data"]:
             node_id = nodeData["id"]
-            nodes.append(Node(id=node_id, size=nodeData["radius"], label=nodeData["label"], 
-                            type=nodeData["type"], data=nodeData["data"], color="green"))
+            nodes.append(Node(id=node_id, size=nodeData["radius"], 
+                            #label=nodeData["label"], 
+                            label='👾', 
+                            type=nodeData["type"], data=nodeData["data"], color="green", shape=None))
 
         for nodeData in grafo["graph"][0]["data"]:
             node_id = nodeData["id"]
@@ -36,14 +38,19 @@ def cargarArchivo(file):
                                 weight=link["weight"], label=str(link["weight"]), 
                                 width=3, color=edge_color, directed=False))
                 if not any(node.id == linked_node_id for node in nodes):
-                    nodes.append(Node(id=linked_node_id, size=20, label=str(linked_node_id), type="circle", color="blue"))
+                    nodes.append(Node(id=linked_node_id, size=20, 
+                                      #label=str(linked_node_id), 
+                                      label='👾',
+                                      type="circle", color="blue", shape=None))
             
     else:
         dirigido = grafo["directed"]
         for nodeData in grafo["nodes"]:
             node_id = nodeData["id"]
-            nodes.append(Node(id=node_id, title=nodeData["title"],label=nodeData["label"],
-                              shape=nodeData["shape"],size=nodeData["size"],color=nodeData["color"]))
+            nodes.append(Node(id=node_id, title=nodeData["title"],
+                              #label=nodeData["label"],
+                              label='👾',
+                              shape=None,size=nodeData["size"],color=nodeData["color"]))
             
         for edgeData in grafo["edges"]:
             source_node_id = edgeData["from"]

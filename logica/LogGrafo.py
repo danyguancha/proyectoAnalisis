@@ -32,7 +32,10 @@ class LogGrafo:
         for u, v in G.edges():
             G.edges[u, v]['weight'] = random.randint(1, 1000)
         
-        nodes = [Node(str(i), label=G.nodes[i]['label']) for i in range(numNodos)]
+        nodes = [Node(str(i), 
+                      #label=G.nodes[i]['label'],
+                      label='👾',
+                      shape=None) for i in range(numNodos)]
         edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=True) for u, v in G.edges()]        
         return nodes, edges
     
@@ -49,7 +52,10 @@ class LogGrafo:
         # Agregar pesos a las aristas
         for u, v in G.edges():
             G.edges[u, v]['weight'] = random.randint(1, 1000)
-        nodes = [Node(str(i), label=G.nodes[i]['label']) for i in range(numNodos)]
+        nodes = [Node(str(i), 
+                      #label=G.nodes[i]['label'], 
+                      label='👾',
+                      shape=None) for i in range(numNodos)]
         edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=False) for u, v in G.edges()]
         return nodes, edges
     
