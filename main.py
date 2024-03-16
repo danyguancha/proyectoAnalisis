@@ -138,6 +138,8 @@ def main():
                     st.sidebar.header("Grafo Personalizado")
                     logNodo.agregarNodo(Node, st)
                     logArista.agregarArista(Edge, st)
+                    logNodo.cambiarColorNodo(st)
+                    logArista.editarArista(st)
                                 
                     
                        
