@@ -1,5 +1,6 @@
 import json
 import random
+import copy
 from typing import Dict, List
 from logica.LogNodo import LogNodo
 from logica.LogArista import LogArista
@@ -18,6 +19,7 @@ import pandas as pd
 class LogGrafo:
     def __init__(self):
         self.grafo = {}
+        self.historial = []
     
     def generarGrafoDirigido (self, numNodos:int, tipoGrafo, Node, Edge):
         if tipoGrafo == "Grafo dirigido":
@@ -179,13 +181,40 @@ class LogGrafo:
             df_nodes.to_excel(writer, sheet_name='Nodes', index=False)
             df_edges.to_excel(writer, sheet_name='Edges', index=False)
 
+            # Obtener los objetos workbook y worksheet
+            workbook  = writer.book
+            worksheet = writer.sheets['Nodes']
+
+            # Definir un formato para las celdas del encabezado
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#D7E4BC',
+                'border': 1})
+
+            # Aplicar el formato a las celdas del encabezado
+            for col_num, value in enumerate(df_nodes.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+
+            # Hacer lo mismo para la hoja 'Edges'
+            worksheet = writer.sheets['Edges']
+            for col_num, value in enumerate(df_edges.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+
+        # Leer el archivo Excel como un objeto BytesIO
+        with open(nombre_archivo, 'rb') as f:
+            excel_data = f.read()
+
         # Botón de descarga
         st.download_button(
             label="Descargar Excel",
-            data=pd.concat([df_nodes, df_edges], axis=1).to_csv(index=False).encode('utf-8'),
-            file_name=nombre_archivo + '.xls',
+            data=excel_data,
+            file_name=nombre_archivo,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
+
     # funcion para mostrar los datos del grafo en una tabla.. por ejemplo dataframe
     def mostrarDatosGrafoTabla(self, nodes, edges, st):
         # Crear el grafo con networkx
@@ -211,6 +240,22 @@ class LogGrafo:
         st.write(df_nodes)
         st.write('Aristas')
         st.write(df_edges)
+
+    def guardar_estado(self):
+        # Guardar una copia del estado actual del grafo en el historial
+        self.historial.append(copy.deepcopy(self.grafo))
+        print(len(self.historial))
+
+    def deshacer_cambio(self):
+        if self.historial:
+            # Si hay estados en el historial, establecer el estado actual del grafo al estado más reciente
+            self.grafo = self.historial.pop()
+            return True
+        else:
+            # Si no hay estados en el historial, retornar False
+            return False
+
+
 
 
 
