@@ -19,13 +19,14 @@ def cargarArchivo(file):
     nodes = []
     edges = []
     # verificar si el grafo tiene la clave graph
+    
     if "graph" in grafo:
         dirigido = grafo['directed']
         for nodeData in grafo["graph"][0]["data"]:
             node_id = nodeData["id"]
             nodes.append(Node(id=node_id, size=nodeData["radius"], 
-                            #label=nodeData["label"], 
-                            label='👾', 
+                            label=nodeData["label"], 
+                            #label='👾', 
                             type=nodeData["type"], data=nodeData["data"], color="green", shape=None))
 
         for nodeData in grafo["graph"][0]["data"]:
@@ -39,8 +40,8 @@ def cargarArchivo(file):
                                 width=3, color=edge_color, directed=False))
                 if not any(node.id == linked_node_id for node in nodes):
                     nodes.append(Node(id=linked_node_id, size=20, 
-                                      #label=str(linked_node_id), 
-                                      label='👾',
+                                      label=str(linked_node_id), 
+                                      #label='👾',
                                       type="circle", color="blue", shape=None))
             
     else:
@@ -48,16 +49,19 @@ def cargarArchivo(file):
         for nodeData in grafo["nodes"]:
             node_id = nodeData["id"]
             nodes.append(Node(id=node_id, title=nodeData["title"],
-                              #label=nodeData["label"],
-                              label='👾',
+                              label=nodeData["label"],
+                              #label='👾',
                               shape=None,size=nodeData["size"],color=nodeData["color"]))
             
         for edgeData in grafo["edges"]:
             source_node_id = edgeData["from"]
             target_node_id = edgeData["to"]
             #edge_color = LogArista().asignarColorArista(edgeData["source"])
+
+            directed = edgeData["directed"] if 'directed' in edgeData else False
+
             edges.append(Edge(source=source_node_id, target=target_node_id, label=str(edgeData["label"]), 
-                            width=3, color=edgeData["color"], directed=edgeData["directed"]))
+                            width=3, color=edgeData["color"], directed=directed))
     return nodes, edges, dirigido
 
 
@@ -123,6 +127,12 @@ def main():
                             nodes, edges = logGrafo.generarGrafoCompleto(num_nodes, selectTipo, Node, Edge)
                             st.session_state.nodes = nodes
                             st.session_state.edges = edges
+
+                elif selected_sub_option == "Personalizado":
+                    st.sidebar.header("Grafo Personalizado")
+                    logNodo.agregarNodo(Node, st)
+                    logArista.agregarArista(Edge, st)
+                    
                                 
                     
                        

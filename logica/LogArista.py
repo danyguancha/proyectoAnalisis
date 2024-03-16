@@ -1,5 +1,8 @@
 class LogArista:
     def agregarArista(self, Edge, st):
+        if 'edges' not in st.session_state:
+            st.session_state.edges = []
+            
         source_node_id = st.sidebar.selectbox("Nodo de inicio", [node.id for node in st.session_state.nodes])
         target_node_id = st.sidebar.selectbox("Nodo de destino", [node.id for node in st.session_state.nodes])
         weight = st.sidebar.number_input("Peso", min_value=1, max_value=1000)

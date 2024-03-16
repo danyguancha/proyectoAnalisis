@@ -7,6 +7,11 @@ class LogNodo:
     
     def agregarNodo(self, Node, st):
         all_possible_ids = set(range(1, 1000))
+
+        if 'nodes' not in st.session_state:
+        # Si no existe, inicializarlo como una lista vacía
+            st.session_state.nodes = []
+
         existing_ids = set([node.id for node in st.session_state.nodes])
         available_ids = list(all_possible_ids - existing_ids)
         idNodo = st.sidebar.selectbox("ID del nodo", available_ids)
