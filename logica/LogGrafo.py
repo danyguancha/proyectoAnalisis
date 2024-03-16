@@ -110,7 +110,7 @@ class LogGrafo:
 
         # Botón de descarga
         st.download_button(
-            label="Descargar JSON",
+            label="Guardar JSON",
             data=json_data,
             file_name=nombre_archivo,
             mime="application/json"

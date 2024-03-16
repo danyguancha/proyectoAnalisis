@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import matplotlib.pyplot as plt
 import networkx as nx
+import os
 from streamlit_agraph import agraph, Node, Edge, Config
 from streamlit_option_menu import option_menu
 from GUI import Gui
@@ -173,6 +174,25 @@ def main():
                     logGrafo.exportarGrafoExcel('excel',st.session_state.nodes, st.session_state.edges, st)
                 elif selected_sub_option == "Imagen":
                     logGrafo.exportarGrafoImagen(st,'grafo_img')
+
+            elif selected_option == "Guardar":
+                    ruta = './Data/'
+                    nombreArchivo = 'grafo_exportado.json'
+                    nombreCompleto = ruta + nombreArchivo
+                    logGrafo.exportarGrafoJson(nombreCompleto, st.session_state.nodes, st.session_state.edges,Node, st)
+
+            elif selected_option == "Guardar Como":
+                ruta = './Data/'
+                nombreArchivo = 'grafo_exportado.json'
+                nombreUsuario = st.text_input("Nombre del archivo", value=nombreArchivo)
+
+                if not nombreUsuario.endswith('.json'):
+                    nombreUsuario += '.json'
+                    
+                nombreCompleto = os.path.join(ruta, nombreUsuario)
+
+                logGrafo.exportarGrafoJson(nombreCompleto, st.session_state.nodes, st.session_state.edges, Node, st)
+
             
         if selected == "Editar":
             
