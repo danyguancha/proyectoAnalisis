@@ -1,5 +1,5 @@
 class LogArista:
-    def agregarArista(self, Edge, st):
+    def agregarArista(self, Edge,tipo, st):
         if 'edges' not in st.session_state:
             st.session_state.edges = []
             
@@ -7,9 +7,10 @@ class LogArista:
         target_node_id = st.sidebar.selectbox("Nodo de destino", [node.id for node in st.session_state.nodes])
         weight = st.sidebar.number_input("Peso", min_value=1, max_value=1000)
         if st.sidebar.button("Agregar Arista"):
-            color = self.asignarColorArista(weight)
-            nueva_arista = Edge(source=source_node_id, target=target_node_id, weight=weight, label=str(weight), width=3, color=color)
+            nueva_arista = Edge(source=source_node_id, target=target_node_id, weight=weight, 
+                                label=str(weight), width=3, directed=tipo)
             st.session_state.edges.append(nueva_arista)
+
             
     def asignarColorArista(self, peso):
         if peso >= 0 and peso <= 50:
@@ -26,9 +27,9 @@ class LogArista:
             return "gray"
         
     
-    def editarArista(self, st):
+    def cambiarPesoArista(self, st):
         selected_edge_label = st.sidebar.selectbox("Seleccionar Arista:", [edge.label for edge in st.session_state.edges])
-        selected_weight = st.sidebar.number_input("Nuevo Peso", min_value=1, max_value=100, value=1)
+        selected_weight = st.sidebar.number_input("Nuevo Peso", min_value=1, max_value=1000, value=1)
         if st.sidebar.button("Editar Peso"):
             selected_edge = next((edge for edge in st.session_state.edges if edge.label == selected_edge_label), None)
             if selected_edge:
@@ -54,6 +55,15 @@ class LogArista:
                 #aristaEliminar.label = f'[ X, {aristaEliminar.label} ]'  # Encerramos el peso en un cuadro
                 #st.session_state.edges = st.session_state.edges  # Actualizamos las aristas
                 #st.session_state.graph = {'edges': st.session_state.edges}  # Inicializamos o actualizamos el grafo
+            else:
+                st.warning("No se ha seleccionado ninguna arista.")
+    def cambiarColorArista(self, st):
+        selectedAristaColor = st.sidebar.selectbox("Cambiar Color Arista:", [edge.label for edge in st.session_state.edges])
+        selected_color = st.sidebar.color_picker("Seleccionar Color", "#ff0000")
+        if st.sidebar.button("Cambiar Color Arista"):
+            selected_arista = next((edge for edge in st.session_state.edges if edge.label == selectedAristaColor), None)
+            if selected_arista:
+                selected_arista.color = selected_color
             else:
                 st.warning("No se ha seleccionado ninguna arista.")
             

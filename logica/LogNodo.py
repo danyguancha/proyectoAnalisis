@@ -16,7 +16,7 @@ class LogNodo:
         available_ids = list(all_possible_ids - existing_ids)
         idNodo = st.sidebar.selectbox("ID del nodo", available_ids)
         if st.sidebar.button("Agregar Nodo"):
-            nuevo_nodo = Node(id=idNodo, size=20, label=str(idNodo), type="circle", color="purple")
+            nuevo_nodo = Node(id=idNodo, size=20, label=str(idNodo), type="circle", color="purple", shape=None)
             st.session_state.nodes.append(nuevo_nodo)
             st.success("Nodo agregado exitosamente!")
     
@@ -25,10 +25,10 @@ class LogNodo:
         selected_node_label = st.sidebar.selectbox("Seleccionar Nodo:", [node.label for node in st.session_state.nodes])
 
         #Se obtiene el color seleccionado por el usuario
-        selected_color = st.sidebar.color_picker("Seleccionar Color", "#ff0000") #Color por defecto
+        selected_color = st.sidebar.color_picker("Seleccionar Color Nodo", "#ff0000") #Color por defecto
 
         # Crear un botón para cambiar el color del nodo seleccionado
-        if st.sidebar.button("Cambiar Color"):
+        if st.sidebar.button("Cambiar Color Nodo"):
             selected_node = next((node for node in st.session_state.nodes if node.label == selected_node_label), None)
             if selected_node:
                 selected_node.color = selected_color

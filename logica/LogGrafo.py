@@ -89,7 +89,8 @@ class LogGrafo:
         listaAristas = [edge.to_dict() for edge in edges]
 
         # Determinar si el grafo es dirigido o no
-        dirigido = any("directed" in edge for edge in listaAristas)
+        #dirigido = any("directed" in edge for edge in listaAristas)
+        dirigido = any(edge.get("directed", False) for edge in listaAristas)
 
         # Crear un diccionario con nodos y aristas
         grafo = {"nodes": listaNodos, "edges": listaAristas, "directed": dirigido}

@@ -5,5 +5,4 @@ def Gui(directed: bool):
                 height=700,
                 directed=directed,
                 physics=False,
-                layout={"name": "cose"},
                 )

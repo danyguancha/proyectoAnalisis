@@ -28,7 +28,7 @@ def cargarArchivo(file):
             node_id = nodeData["id"]
             nodes.append(Node(id=node_id, size=nodeData["radius"], 
                             label=nodeData["label"], 
-                            type=nodeData["type"], data=nodeData["data"], color="green"))
+                            type=nodeData["type"], data=nodeData["data"], color="green", shape=None))
 
         for nodeData in grafo["graph"][0]["data"]:
             node_id = nodeData["id"]
@@ -41,14 +41,14 @@ def cargarArchivo(file):
                 if not any(node.id == linked_node_id for node in nodes):
                     nodes.append(Node(id=linked_node_id, size=20, 
                                       label=str(linked_node_id), 
-                                      type="circle", color="blue"))
+                                      type="circle", color="blue", shape=None))
             
     else:
         for nodeData in grafo["nodes"]:
             node_id = nodeData["id"]
             nodes.append(Node(id=node_id, title=nodeData["title"],
                               label=nodeData["label"],
-                              size=nodeData["size"],color=nodeData["color"]))
+                              size=nodeData["size"],color=nodeData["color"], shape=None))
             
         for edgeData in grafo["edges"]:
             source_node_id = edgeData["from"]
@@ -119,7 +119,9 @@ def main():
                                 nodes, edges = logGrafo.generarGrafoCompleto(num_nodes, selectTipo, Node, Edge)
                                 st.session_state.nodes = nodes
                                 st.session_state.edges = edges
-                                bandera = False
+                                st.session_state.directed = True
+                            if st.session_state.directed:
+                                bandera = True
                                 estado = True
                         elif nuevaOp == "Grafo no dirigido":
                             if st.session_state.directed == None:
@@ -131,18 +133,31 @@ def main():
                             estado = True
                 elif selected_sub_option == "Personalizado":
                     st.sidebar.header("Grafo Personalizado")
+                    st.sidebar.header("Tipo de Grafo") 
+                    tipo_grafo = st.radio("",["Dirigido", "No dirigido"], key="tipoGrafo")
+                    if tipo_grafo == "Dirigido":
+                        bandera = True
+                    elif tipo_grafo == "No dirigido":
+                        bandera = False
+                    st.sidebar.header("Agrega Nodo") 
                     logNodo.agregarNodo(Node, st)
-                    st.sidebar.header("Agrega Aristas")
-                    logArista.agregarArista(Edge, st)
-                    st.sidebar.header(" Cambiar Color")
+                    st.sidebar.header(" Cambiar Color Nodo")
                     logNodo.cambiarColorNodo(st)
-                    st.sidebar.header("Cambiar Peso")
-                    logArista.editarArista(st)
+                    st.sidebar.header("Agrega Aristas") 
+                    if tipo_grafo == "Dirigido":
+                        logArista.agregarArista(Edge,True, st)
+                    elif tipo_grafo == "No dirigido":
+                        logArista.agregarArista(Edge,False, st)
+                    
+                    st.sidebar.header(" Cambiar Color Arista")
+                    logArista.cambiarColorArista(st)
+                    st.sidebar.header("Cambiar Peso Arista")
+                    logArista.cambiarPesoArista(st)
+                    estado = True
                                 
                     
                        
             elif selected_option == "Abrir":
-                
                 if st.session_state.directed == None:
                     cargarGrafo()
                     estado = True
@@ -171,9 +186,8 @@ def main():
                     logGrafo.exportarGrafoExcel('excel',st.session_state.nodes, st.session_state.edges, st)
                 elif selected_sub_option == "Imagen":
                     logGrafo.exportarGrafoImagen(st,'grafo_img')
-            
+        
         if selected == "Editar":
-            
             selected_option = st.selectbox(
                 "Seleccionar opción:",
                 ["Deshacer", "Nodo", "Arista", "Guardar", "Guardar Como", "Importar Datos", "Salir"]
@@ -192,12 +206,20 @@ def main():
             #=======================Seccion de arcos=======================
             elif selected_option == "Arista":
                 st.sidebar.header("Aristas")
-                logArista.agregarArista(Edge, st)
-                logArista.editarArista(st)
+                st.header("Agregar Arista")
+                if st.session_state.directed:  # Si el grafo es dirigido
+                    bandera=True
+                    logArista.agregarArista(Edge, True, st)  # Establece la dirección en True
+                else:
+                    logArista.agregarArista(Edge, False, st)
+                st.header("Cambiar Peso Arista")
+                logArista.cambiarPesoArista(st)
+                st.header("Cambiar Color Arista")
+                logArista.cambiarColorArista(st)
+                st.header("Eliminar Arista")
                 logArista.eliminarArista(st)
-            
-        
-        elif selected == "Ejecutar":
+   
+        if selected == "Ejecutar":
             selected_option = option_menu(
                 menu_title=None,
                 options=["Procesos"]
@@ -230,19 +252,14 @@ def main():
   
     if "nodes" not in st.session_state:
         st.warning("No se ha cargado ningún archivo.")
+        #st.session_state.directed = None
     else:
         # Renderizar el grafo en el cuerpo principal
-        
-        if bandera == True:
-            with st.container(border=True):
-                agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui(True))
-        else:
-            with st.container(border=True):
-                config = Gui(False)
-                agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=config)
+        configuracion = Gui(bandera)
+        with st.container(border=True):
+            agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=configuracion)
         if estado:
             logGrafo.mostrarDatosGrafoTabla(st.session_state.nodes, st.session_state.edges,st)
         
-
 if __name__ == "__main__":
     main()
