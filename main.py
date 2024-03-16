@@ -19,6 +19,7 @@ def cargarArchivo(file):
     grafo = LectorArchivo.cargarArchivo(file)
     nodes = []
     edges = []
+    dirigido = grafo.get('directed', False)
 
     # establecer un valor predeterminado para 'directed'
     dirigido = grafo.get('directed', False)
@@ -82,7 +83,6 @@ def main():
         )
         
         if selected == "Archivo":
-
             selected_option = st.selectbox(
                 "Seleccionar opción:",
                 ["Nuevo Grafo", "Abrir", "Buscar Nodo", "Cerrar", "Guardar", "Guardar Como", "Exportar Datos", "Importar Datos", "Salir"]
@@ -120,16 +120,14 @@ def main():
                                 nodes, edges = logGrafo.generarGrafoCompleto(num_nodes, selectTipo, Node, Edge)
                                 st.session_state.nodes = nodes
                                 st.session_state.edges = edges
-                                st.session_state.directed = True
- 
-                            if st.session_state.directed:
-                                bandera = True
+                                bandera = False
                                 estado = True
                         elif nuevaOp == "Grafo no dirigido":
                             if st.session_state.directed == None:
                                 nodes, edges = logGrafo.generarGrafoCompleto(num_nodes, selectTipo, Node, Edge)
                                 st.session_state.nodes = nodes
                                 st.session_state.edges = edges
+                            if st.session_state.directed==True:
                                 bandera = False
                             estado = True
                 elif selected_sub_option == "Personalizado":
@@ -249,18 +247,16 @@ def main():
         
     # Navbar
     st.title("Proyecto de Análisis de Algoritmos")
-    #if ayuda:
-        #LectorArchivo().leerArchivoPdf('E:\proyectosU\semestres\semestre-2024-1\Analisis\proyectoAnalisis\Data\ManualUsuario.pdf')
-
+  
     if "nodes" not in st.session_state:
         st.warning("No se ha cargado ningún archivo.")
     else:
         # Renderizar el grafo en el cuerpo principal
+        
         if bandera == True:
             with st.container(border=True):
                 agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui(True))
         else:
-          
             with st.container(border=True):
                 config = Gui(False)
                 agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=config)
