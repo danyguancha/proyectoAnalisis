@@ -180,7 +180,7 @@ class LogGrafo:
         # Guardar los DataFrames en un archivo de Excel
         with pd.ExcelWriter(nombre_archivo, engine='xlsxwriter') as writer:
             df_nodes.to_excel(writer, sheet_name='Nodes', index=False)
-            df_edges.to_excel(writer, sheet_name='Edges', index=False)
+            #df_edges.to_excel(writer, sheet_name='Edges', index=False)
 
             # Obtener los objetos workbook y worksheet
             workbook  = writer.book
@@ -255,6 +255,20 @@ class LogGrafo:
         else:
             # Si no hay estados en el historial, retornar False
             return False
+    # funcion para descargar manual de usuario desde pdf
+    def descargarManualUsuario(self, archivo, st):
+        # Leer el archivo PDF como un objeto BytesIO
+        with open(archivo, 'rb') as f:
+            pdf_data = f.read()
+
+        # Botón de descarga
+        st.download_button(
+            label="Descargar Manual de Usuario",
+            data=pdf_data,
+            file_name="ManualUsuario.pdf",
+            mime="application/pdf"
+        )
+    
 
 
 

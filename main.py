@@ -272,7 +272,8 @@ def main():
                 ["Ayuda", "Acerca de Grafos"]
             )
             if selected_option == "Ayuda":
-                ayuda = True
+                ruta = './Data/Manual de Usuario - Proyecto ADA.pdf'
+                logGrafo.descargarManualUsuario(ruta, st)
             
     
         
