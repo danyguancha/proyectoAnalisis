@@ -266,6 +266,12 @@ def main():
                 ["Gráfica", "Tabla"]
             )
 
+            if selected_option == "Gráfica":
+                st.text(" Opción no dipsonible")
+
+            elif selected_option == "Tabla":
+                logGrafo.mostrarDatosGrafoTabla(st.session_state.nodes, st.session_state.edges,st)
+
         elif selected == "Ayuda":
             selected_option = st.selectbox(
                 "Seleccionar opción:",
@@ -288,8 +294,8 @@ def main():
         configuracion = Gui(bandera)
         with st.container(border=True):
             agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=configuracion)
-        if estado:
-            logGrafo.mostrarDatosGrafoTabla(st.session_state.nodes, st.session_state.edges,st)
+        #if estado:
+            #logGrafo.mostrarDatosGrafoTabla(st.session_state.nodes, st.session_state.edges,st)
         
 if __name__ == "__main__":
     main()
