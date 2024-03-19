@@ -160,9 +160,7 @@ def main():
                     st.sidebar.header("Cambiar Peso Arista")
                     logArista.cambiarPesoArista(st)
                     estado = True
-                                
-                    
-                       
+                                        
             elif selected_option == "Abrir":
                 if st.session_state.directed == None:
                     cargarGrafo()
@@ -279,6 +277,9 @@ def main():
             )
             if selected_option == "Ayuda":
                 ruta = './Data/Manual de Usuario - Proyecto ADA.pdf'
+                logGrafo.descargarManualUsuario(ruta, st)
+            elif selected_option == "Acerca de Grafos":
+                ruta = './Data/grafos.pdf'
                 logGrafo.descargarManualUsuario(ruta, st)
             
     

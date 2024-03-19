@@ -263,9 +263,9 @@ class LogGrafo:
 
         # Botón de descarga
         st.download_button(
-            label="Descargar Manual de Usuario",
+            label="Descargar archivo PDF",
             data=pdf_data,
-            file_name="ManualUsuario.pdf",
+            file_name="Archivo.pdf",
             mime="application/pdf"
         )
     
