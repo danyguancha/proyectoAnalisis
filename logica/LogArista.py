@@ -1,4 +1,8 @@
+import random
 class LogArista:
+    def __init__(self):
+        self.aux = False
+        self.color_dict = {}
     def agregarArista(self, Edge,tipo, st):
         if 'edges' not in st.session_state:
             st.session_state.edges = []
@@ -37,26 +41,28 @@ class LogArista:
                 selected_edge.label = str(selected_weight)
             else:
                 st.warning("No se ha seleccionado ninguna arista.")
-    
+        
     def eliminarArista(self, st):
-        selectedAristaEliminar = st.sidebar.selectbox("Eliminar Arista:", [edge.label for edge in st.session_state.edges])
+        # seleccionar arista a eliminar con nodo inicio y nodo destino
+        st.write('I: Nodo Inicio')
+        st.write('D: Nodo Destino')
+        st.write('P: Peso de la arista')
+        selectedAristaEliminar = st.sidebar.selectbox("Eliminar Arista:",['Arista. '+str({'I':edge.source, 'D':edge.to, 'P':edge.weight}) for edge in st.session_state.edges])
+        
+        # Si ya se seleccionó una arista anteriormente, cambiar su color al original
+        if hasattr(st.session_state, 'last_selected_edge') and st.session_state.last_selected_edge:
+            st.session_state.last_selected_edge.color = 'gray'
         
         if st.sidebar.button("Eliminar Arista"):
-            aristaEliminar = next((edge for edge in st.session_state.edges if edge.label == selectedAristaEliminar), None)
+            aristaEliminar = next((edge for edge in st.session_state.edges if 'Arista. '+str({'I':edge.source, 'D':edge.to, 'P':edge.weight}) == selectedAristaEliminar), None)
             
             if aristaEliminar:
-                color = 'rgba(254, 20, 56, 0.2)'
-                if aristaEliminar.color == color and aristaEliminar.width==4:
-                    st.warning('Esta arista ya fue eliminada anteriormente')
-                else:
-                    aristaEliminar.width = 5
-                    aristaEliminar.color = color
-                
-                #aristaEliminar.label = f'[ X, {aristaEliminar.label} ]'  # Encerramos el peso en un cuadro
-                #st.session_state.edges = st.session_state.edges  # Actualizamos las aristas
-                #st.session_state.graph = {'edges': st.session_state.edges}  # Inicializamos o actualizamos el grafo
+                aristaEliminar.dashes = True
+                aristaEliminar.color = 'rgba(254, 20, 56, 0.5)'  # Cambiar el color de la arista a rgba cuando se elimina
+                st.session_state.last_selected_edge = None  # Resetear la última arista seleccionada
             else:
                 st.warning("No se ha seleccionado ninguna arista.")
+        
     def cambiarColorArista(self, st):
         selectedAristaColor = st.sidebar.selectbox("Cambiar Color Arista:", [edge.label for edge in st.session_state.edges])
         selected_color = st.sidebar.color_picker("Seleccionar Color", "#ff0000")

@@ -11,6 +11,7 @@ from lector.LectorArchivo import LectorArchivo
 from logica.LogNodo import LogNodo
 from logica.LogArista import LogArista
 from logica.LogGrafo import LogGrafo
+import random
 
 
 # Función para cargar el grafo desde el archivo y almacenar en la caché
@@ -49,7 +50,9 @@ def cargarArchivo(file):
             node_id = nodeData["id"]
             nodes.append(Node(id=node_id, title=nodeData["title"],
                               label=nodeData["label"],
-                              size=nodeData["size"],color=nodeData["color"], shape=None))
+                              size=nodeData["size"],color=nodeData["color"], shape=None,
+                              x=random.uniform(0, 900),  # Coordenada x aleatoria
+                              y=random.uniform(0, 900)))
             
         for edgeData in grafo["edges"]:
             source_node_id = edgeData["from"]
@@ -58,8 +61,8 @@ def cargarArchivo(file):
             # usar el valor de 'directed' si está presente, de lo contrario usar el valor predeterminado
             directed = edgeData.get('directed', dirigido)
 
-            edges.append(Edge(source=source_node_id, target=target_node_id, label=str(edgeData["label"]), 
-                            width=3, color=edgeData["color"], directed=directed))
+            edges.append(Edge(source=source_node_id, target=target_node_id, label=str(edgeData["weight"]), 
+                            weight=edgeData["weight"], width=3, color=edgeData["color"], directed=directed))
     return nodes, edges, dirigido
 
 
@@ -68,13 +71,13 @@ def cargarGrafo():
     if file is not None:
         st.session_state.nodes, st.session_state.edges, st.session_state.directed = cargarArchivo(file)
         st.session_state.grafo_cargado = True
-      
+   
 def main():
     logNodo = LogNodo()
     logArista = LogArista()
     logGrafo = LogGrafo()
     bandera = False
-    estado = False
+    bipartito = False
     with st.sidebar:
         st.session_state.directed = None
         selected = option_menu(
@@ -95,7 +98,7 @@ def main():
             if selected_option == "Nuevo Grafo":
                 selected_sub_option = st.selectbox(
                     "Seleccionar sub-opción:",
-                    [" ","Personalizado", "Aleatorio"]
+                    [" ","Personalizado", "Aleatorio","Bipartito"]
                 )
                 if selected_sub_option == "Aleatorio":
                     num_nodes = st.sidebar.number_input('Ingrese el número de nodos', min_value=0, value=0)
@@ -124,7 +127,7 @@ def main():
                                 st.session_state.directed = True
                             if st.session_state.directed:
                                 bandera = True
-                                estado = True
+                                
                         elif nuevaOp == "Grafo no dirigido":
                             if st.session_state.directed == None:
                                 nodes, edges = logGrafo.generarGrafoCompleto(num_nodes, selectTipo, Node, Edge)
@@ -132,7 +135,7 @@ def main():
                                 st.session_state.edges = edges
                             if st.session_state.directed==True:
                                 bandera = False
-                            estado = True
+                           
 
                     elif selectTipo == "Ponderado":
                         st.text("Opción con fallos, estará disponible muy pronto")
@@ -159,12 +162,18 @@ def main():
                     logArista.cambiarColorArista(st)
                     st.sidebar.header("Cambiar Peso Arista")
                     logArista.cambiarPesoArista(st)
-                    estado = True
+                elif selected_sub_option == "Bipartito":
+                    numNodosG1 = st.sidebar.number_input("Número de nodos conjunto 1", min_value=0, max_value=100)
+                    numNodosG2 = st.sidebar.number_input("Número de nodos conjunto 2", min_value=0, max_value=100)
+                    st.session_state.nodes, st.session_state.edges = logGrafo.generarGrafoBipartito(numNodosG1, numNodosG2,Node, Edge)
+                    
+                   
                                         
             elif selected_option == "Abrir":
                 if st.session_state.directed == None:
+                    
                     cargarGrafo()
-                    estado = True
+                   
                 if st.session_state.directed:
                     bandera = True
                 
@@ -172,6 +181,7 @@ def main():
                 st.session_state.nodes = []
                 st.session_state.edges = []
                 st.session_state.grafo_cargado = False
+                
             elif selected_option == "Exportar Datos":
                 
                 selected_sub_option = st.selectbox(
@@ -183,8 +193,7 @@ def main():
                     nombreArchivo = 'grafo_exportado.json'
                     nombreCompleto = ruta + nombreArchivo
                     logGrafo.exportarGrafoJson(nombreCompleto, st.session_state.nodes, st.session_state.edges,Node, st)
-                elif selected_sub_option == "CSV":
-                    estado = True
+                
                     
                 elif selected_sub_option == "Excel":
                     logGrafo.exportarGrafoExcel('datos_grafo.xlsx',st.session_state.nodes, st.session_state.edges, st)
@@ -217,11 +226,7 @@ def main():
             )
             #=======================Seccion de nodos=======================
             if selected_option == "Deshacer":
-                cambio = logGrafo.deshacer_cambio()
-                if cambio:
-                    st.text("Se ha deshecho el cambio")
-                else:
-                    st.text("No hay cambios que deshacer")
+                logGrafo.deshacerCambios(st)
             elif selected_option == "Nodo":
                 st.sidebar.header("Nodos")
                 logNodo.agregarNodo(Node, st, logGrafo)
@@ -255,9 +260,15 @@ def main():
             if selected_option == "Procesos":
                 selected_sub_option = st.selectbox(
                     "Seleccionar un proceso:",
-                    ["Proceso 1", "Proceso 2"]
+                    ["¿El grafo es bipartito?", "Proceso 2"]
                 )
-
+                if selected_sub_option == "¿El grafo es bipartito?":
+                    if logGrafo.esBipartito(st.session_state.nodes, st.session_state.edges):
+                        st.text("El grafo es bipartito")
+                    else:
+                        st.text("El grafo no es bipartito")
+                 
+                    
         elif selected == "Ventana":
             selected_option = st.selectbox(
                 "Seleccionar opción:",
@@ -286,17 +297,17 @@ def main():
         
     # Navbar
     st.title("Proyecto de Análisis de Algoritmos")
-  
+    
     if "nodes" not in st.session_state:
         st.warning("No se ha cargado ningún archivo.")
-        #st.session_state.directed = None
     else:
         # Renderizar el grafo en el cuerpo principal
+        
         configuracion = Gui(bandera)
         with st.container(border=True):
             agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=configuracion)
-        #if estado:
-            #logGrafo.mostrarDatosGrafoTabla(st.session_state.nodes, st.session_state.edges,st)
+        
+        
         
 if __name__ == "__main__":
     main()

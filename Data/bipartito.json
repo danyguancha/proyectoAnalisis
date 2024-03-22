@@ -1,0 +1,263 @@
+{
+    "nodes": [
+        {
+            "id": "0",
+            "title": "0",
+            "label": "Nodo 1",
+            "shape": null,
+            "size": 25,
+            "color": "blue",
+            "x": 284.06325207544586,
+            "y": 480.9240966676809
+        },
+        {
+            "id": "1",
+            "title": "1",
+            "label": "Nodo 2",
+            "shape": null,
+            "size": 25,
+            "color": "blue",
+            "x": 805.272706158059,
+            "y": 381.48088322807445
+        },
+        {
+            "id": "2",
+            "title": "2",
+            "label": "Nodo 3",
+            "shape": null,
+            "size": 25,
+            "color": "blue",
+            "x": 816.1798264303402,
+            "y": 173.7827052523713
+        },
+        {
+            "id": "3",
+            "title": "3",
+            "label": "Nodo 4",
+            "shape": null,
+            "size": 25,
+            "color": "blue",
+            "x": 315.0557066099411,
+            "y": 828.9214479172122
+        },
+        {
+            "id": "4",
+            "title": "4",
+            "label": "Nodo 5",
+            "shape": null,
+            "size": 25,
+            "color": "red",
+            "x": 310.0443447095773,
+            "y": 782.465126237383
+        },
+        {
+            "id": "5",
+            "title": "5",
+            "label": "Nodo 6",
+            "shape": null,
+            "size": 25,
+            "color": "red",
+            "x": 624.1736355577965,
+            "y": 54.23210018878044
+        },
+        {
+            "id": "6",
+            "title": "6",
+            "label": "Nodo 7",
+            "shape": null,
+            "size": 25,
+            "color": "red",
+            "x": 754.7192057884039,
+            "y": 687.8198495330586
+        },
+        {
+            "id": "7",
+            "title": "7",
+            "label": "Nodo 8",
+            "shape": null,
+            "size": 25,
+            "color": "red",
+            "x": 60.87690108941182,
+            "y": 145.0693528451929
+        }
+    ],
+    "edges": [
+        {
+            "source": "0",
+            "from": "0",
+            "to": "4",
+            "weight": 104,
+            "color": "gray",
+            "type": "dotted",
+            "label": "104",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "0",
+            "from": "0",
+            "to": "5",
+            "weight": 810,
+            "color": "gray",
+            "type": "dotted",
+            "label": "810",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "0",
+            "from": "0",
+            "to": "6",
+            "weight": 3,
+            "color": "gray",
+            "type": "dotted",
+            "label": "3",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "0",
+            "from": "0",
+            "to": "7",
+            "weight": 5,
+            "color": "gray",
+            "type": "dotted",
+            "label": "5",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "1",
+            "from": "1",
+            "to": "4",
+            "weight": 223,
+            "color": "gray",
+            "type": "dotted",
+            "label": "223",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "1",
+            "from": "1",
+            "to": "5",
+            "weight": 870,
+            "color": "gray",
+            "type": "dotted",
+            "label": "870",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "1",
+            "from": "1",
+            "to": "6",
+            "weight": 346,
+            "color": "gray",
+            "type": "dotted",
+            "label": "346",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "1",
+            "from": "1",
+            "to": "7",
+            "weight": 392,
+            "color": "gray",
+            "type": "dotted",
+            "label": "392",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "2",
+            "from": "2",
+            "to": "4",
+            "weight": 52,
+            "color": "gray",
+            "type": "dotted",
+            "label": "52",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "2",
+            "from": "2",
+            "to": "5",
+            "weight": 627,
+            "color": "gray",
+            "type": "dotted",
+            "label": "627",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "2",
+            "from": "2",
+            "to": "6",
+            "weight": 372,
+            "color": "gray",
+            "type": "dotted",
+            "label": "372",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "2",
+            "from": "2",
+            "to": "7",
+            "weight": 309,
+            "color": "gray",
+            "type": "dotted",
+            "label": "309",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "3",
+            "from": "3",
+            "to": "4",
+            "weight": 445,
+            "color": "gray",
+            "type": "dotted",
+            "label": "445",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "3",
+            "from": "3",
+            "to": "5",
+            "weight": 786,
+            "color": "gray",
+            "type": "dotted",
+            "label": "786",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "3",
+            "from": "3",
+            "to": "6",
+            "weight": 987,
+            "color": "gray",
+            "type": "dotted",
+            "label": "987",
+            "width": 3,
+            "directed": false
+        },
+        {
+            "source": "3",
+            "from": "3",
+            "to": "7",
+            "weight": 415,
+            "color": "gray",
+            "type": "dotted",
+            "label": "415",
+            "width": 3,
+            "directed": false
+        }
+    ],
+    "directed": false
+}

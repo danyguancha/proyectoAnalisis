@@ -14,6 +14,10 @@ import io
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
+import streamlit as st
+import random
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 class LogGrafo:
@@ -21,6 +25,8 @@ class LogGrafo:
         self.grafo = {}
         self.historial = []
     
+    # ========================GENERACIÓN DE GRAFOS=============================================
+   
     def generarGrafoDirigido (self, numNodos:int, tipoGrafo, Node, Edge):
         if tipoGrafo == "Grafo dirigido":
             G = nx.gnm_random_graph(numNodos, numNodos, directed=True)
@@ -36,10 +42,13 @@ class LogGrafo:
         
         nodes = [Node(str(i), 
                       label=G.nodes[i]['label'],
-                      shape=None) for i in range(numNodos)]
-        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=True) for u, v in G.edges()]        
+                      shape=None,
+                        x=random.uniform(0, 900),  # Coordenada x aleatoria
+                    y=random.uniform(0, 900)) for i in range(numNodos)]
+        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), weight=G.edges[u, v]['weight'],
+                      width=3, directed=True) for u, v in G.edges()]        
         return nodes, edges
-    
+   
     def generarGrafoCompleto(self, numNodos:int, tipoGrafo, Node, Edge):
         if tipoGrafo == 'Completo':
             G = nx.complete_graph(numNodos)
@@ -49,46 +58,117 @@ class LogGrafo:
         # Agregar pesos a las aristas
         for u, v in G.edges():
             G.edges[u, v]['weight'] = random.randint(1, 1000)
+        
         nodes = [Node(str(i), 
-                      label=G.nodes[i]['label'], 
-                      shape=None) for i in range(numNodos)]
-        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=False) for u, v in G.edges()]
+                    label=G.nodes[i]['label'], 
+                    shape=None,
+                    x=random.uniform(0, 900),  # Coordenada x aleatoria
+                    y=random.uniform(0, 900))  # Coordenada y aleatoria
+                for i in range(numNodos)]
+        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=False, 
+                    type="dotted",weight=G.edges[u, v]['weight']) for u, v in G.edges()]
+        return nodes, edges
+
+        # Funcion para crear un grafo bipartito, donde se puede elegir el numero de nodos de cada conjunto
+    def generarGrafoBipartito(self, numNodosConjunto1: int, numNodosConjunto2: int, Node, Edge):
+        # Crear un grafo bipartito
+        G = nx.complete_bipartite_graph(numNodosConjunto1, numNodosConjunto2)
+
+        # Agregar etiquetas a los nodos
+        for i in range(numNodosConjunto1 + numNodosConjunto2):
+            G.nodes[i]['label'] = f'Nodo {i+1}'
+
+        # Agregar pesos a las aristas
+        for u, v in G.edges():
+            G.edges[u, v]['weight'] = random.randint(1, 1000)
+
+        # Crear una lista de nodos
+        nodes = [Node(str(i), 
+                    label=G.nodes[i]['label'],
+                    shape=None,
+                    x=random.uniform(0, 900),  # Coordenada x aleatoria
+                    y=random.uniform(0, 900),  # Coordenada y aleatoria
+                    color='blue' if i < numNodosConjunto1 else 'red')  # Color de nodo
+                for i in range(numNodosConjunto1 + numNodosConjunto2)]
+
+        # Crear una lista de aristas
+        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=False, 
+                    type="dotted", weight=G.edges[u, v]['weight']) for u, v in G.edges()]
+
         return nodes, edges
     
-
+    # ========================OPERACIONES CON GRAFOS=============================================
+    
     def esCompleto(self, numNodos: int, numAristas: int) -> bool:
         return numAristas == (numNodos * (numNodos - 1)) / 2
     
     def esDirigido(self, numNodos: int, numAristas: int) -> bool:
         return numAristas == numNodos * numNodos
-
-    """def exportarGrafoJson(self, nombre_archivo: str, nodes, edges, Node, st):
-        # Convertir la lista de nodos a una lista de diccionarios usando el método to_dict
-        listaNodos = [node.to_dict() for node in nodes]
-        listaAristas = [edge.to_dict() for edge in edges]
-
-        # Crear un diccionario con nodos y aristas
-        grafo = {"nodes": listaNodos, "edges": listaAristas}
-
-        # Guardar el grafo en un archivo JSON
-        with open(nombre_archivo, 'w') as archivo:
-            json.dump(grafo, archivo, default=self.serialize_nodes(nodes, Node), ident=4)
-
-        # Leer el archivo JSON
-        with open(nombre_archivo, "r") as json_file:
-            json_data = json_file.read()
+    
+    # Función para serializar los nodos
+    def serialize_nodes(self,obj, Node):
+        if isinstance(obj, Node):
+            return obj.__dict__
+        return obj
+    
+    def serialize_edges(self,obj, Edge):
+        if isinstance(obj, Edge):
+            return obj.__dict__
+        return obj
+    
+    # funcion para descargar manual de usuario desde pdf
+    def descargarManualUsuario(self, archivo, st):
+        # Leer el archivo PDF como un objeto BytesIO
+        with open(archivo, 'rb') as f:
+            pdf_data = f.read()
 
         # Botón de descarga
         st.download_button(
-            label="Descargar JSON",
-            data=json_data,
-            file_name=nombre_archivo,
-            mime="application/json"
-        )"""
+            label="Descargar archivo PDF",
+            data=pdf_data,
+            file_name="Archivo.pdf",
+            mime="application/pdf"
+        )
+
+    # funcion para determinar si un grafo es bipartito o no
+    def esBipartito(self, nodes, edges) -> bool:
+        # Crear el grafo con networkx
+        salida = False
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.label)
+        
+        # verificar si en el grafo hay una arista de color 'rgba(254, 20, 56, 0.5)'
+        for edge in edges:
+            if edge.color == 'rgba(254, 20, 56, 0.5)':
+                salida = True
+            else:
+                salida = bipartite.is_bipartite(G)
+        return salida  
+    
+    """def guardar_estado(self):
+        # Guardar una copia del estado actual del grafo en el historial
+        self.historial.append(copy.deepcopy(self.grafo))
+        print(len(self.historial))
+
+    def deshacer_cambio(self):
+        if self.historial:
+            # Si hay estados en el historial, establecer el estado actual del grafo al estado más reciente
+            self.grafo = self.historial.pop()
+            return True
+        else:
+            # Si no hay estados en el historial, retornar False
+            return False"""
+    
+
+    # ========================EXPORTACIÓN DE GRAFOS=============================================
+
     def exportarGrafoJson(self, nombre_archivo: str, nodes, edges, Node, st):
         # Convertir la lista de nodos a una lista de diccionarios usando el método to_dict
         listaNodos = [node.to_dict() for node in nodes]
-        listaAristas = [edge.to_dict() for edge in edges]
+        listaAristas = [edge.to_dict() for edge in edges if edge.color=='gray']
 
         # Determinar si el grafo es dirigido o no
         #dirigido = any("directed" in edge for edge in listaAristas)
@@ -113,23 +193,13 @@ class LogGrafo:
             mime="application/json"
         )
 
-   
-
-    # Función para serializar los nodos
-    def serialize_nodes(self,obj, Node):
-        if isinstance(obj, Node):
-            return obj.__dict__
-        return obj
-    
-    def serialize_edges(self,obj, Edge):
-        if isinstance(obj, Edge):
-            return obj.__dict__
-        return obj
-
     def exportarGrafoImagen(self, st, nombre_archivo: str, formato: str = 'png'):
         # Crear el grafo desde la caché de la sesión
         nodes = st.session_state.nodes
-        edges = st.session_state.edges
+        #edges =  st.session_state.edges
+        edges = [edge for edge in st.session_state.edges if edge.color=='gray']
+        #edges = st.session_state.edges
+       
         # Crear el grafo con networkx
         G = nx.Graph()
         for node in nodes:
@@ -215,8 +285,8 @@ class LogGrafo:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
+    # ========================MOSTRAR DATOS DE GRAFOS=============================================
 
-    # funcion para mostrar los datos del grafo en una tabla.. por ejemplo dataframe
     def mostrarDatosGrafoTabla(self, nodes, edges, st):
         # Crear el grafo con networkx
         G = nx.Graph()
@@ -240,39 +310,35 @@ class LogGrafo:
         st.write('Nodos')
         st.write(df_nodes)
         st.write('Aristas')
-        st.write(df_edges)
+        st.write(df_edges)  
+            
+    # Funcion para mostrar el grafo en un formato de matriz de adyacencia
+    def mostrarMatrizAdyacencia(self, nodes, edges, st):
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.label)
 
-    def guardar_estado(self):
-        # Guardar una copia del estado actual del grafo en el historial
-        self.historial.append(copy.deepcopy(self.grafo))
-        print(len(self.historial))
+        # Crear una matriz de adyacencia
+        matriz_adyacencia = nx.to_pandas_adjacency(G)
 
-    def deshacer_cambio(self):
-        if self.historial:
-            # Si hay estados en el historial, establecer el estado actual del grafo al estado más reciente
-            self.grafo = self.historial.pop()
-            return True
-        else:
-            # Si no hay estados en el historial, retornar False
-            return False
-    # funcion para descargar manual de usuario desde pdf
-    def descargarManualUsuario(self, archivo, st):
-        # Leer el archivo PDF como un objeto BytesIO
-        with open(archivo, 'rb') as f:
-            pdf_data = f.read()
+        # Mostrar la matriz de adyacencia en Streamlit
+        st.write("Matriz de adyacencia")
+        st.write(matriz_adyacencia)
 
-        # Botón de descarga
-        st.download_button(
-            label="Descargar archivo PDF",
-            data=pdf_data,
-            file_name="Archivo.pdf",
-            mime="application/pdf"
-        )
+    # Funcion para deshacer los cambios que se hayan hecho en el grafo, por ejemplo eliminar una arista volver a dejarla como estaba hasta antes de eliminarla, etc...
+    def deshacerCambios(self,  st):
+        # Crear una copia de los nodos y aristas originales
+        original_nodes = copy.deepcopy(st.session_state.nodes)
+        original_edges = copy.deepcopy(st.session_state.edges)
+
+        # Restaurar los nodos y aristas originales
+        st.session_state.nodes = original_nodes
+        st.session_state.edges = original_edges
+
+        # Mostrar un mensaje de éxito
+        st.success("Cambios deshechos con éxito")
     
-
-
-
-
-
-        
-        
+   

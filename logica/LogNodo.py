@@ -27,7 +27,6 @@ class LogNodo:
     def cambiarColorNodo(self, st):
         # Crear un selectbox para seleccionar el nodo
         selected_node_label = st.sidebar.selectbox("Seleccionar Nodo:", [node.label for node in st.session_state.nodes])
-
         #Se obtiene el color seleccionado por el usuario
         selected_color = st.sidebar.color_picker("Seleccionar Color Nodo", "#ff0000") #Color por defecto
 
