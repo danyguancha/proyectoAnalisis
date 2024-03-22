@@ -18,6 +18,7 @@ import streamlit as st
 import random
 import networkx as nx
 import matplotlib.pyplot as plt
+from networkx.algorithms.components import is_connected
 
 
 class LogGrafo:
@@ -147,6 +148,27 @@ class LogGrafo:
             else:
                 salida = bipartite.is_bipartite(G)
         return salida  
+    def esBipartitoConexoOdisconexo(self, nodes, edges) -> str:
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            if edge.color != 'rgba(254, 20, 56, 0.5)':  # Solo agregar las aristas que no tienen este color
+                G.add_edge(edge.source, edge.to, weight=edge.label)
+
+        # verificar si el grafo es bipartito
+        if not bipartite.is_bipartite(G):
+            return "El grafo no es bipartito"
+
+        # verificar si el grafo es conexo o disconexo
+        if is_connected(G):
+            return "El grafo es bipartito y conexo"
+        else:
+            return "El grafo es bipartito y disconexo"
+
+
+
     
     """def guardar_estado(self):
         # Guardar una copia del estado actual del grafo en el historial
@@ -340,5 +362,20 @@ class LogGrafo:
 
         # Mostrar un mensaje de éxito
         st.success("Cambios deshechos con éxito")
+    
+    # Funcion para determinar si un es bipartito conexo o disconexto
+    def esBipartitoConexo(self, nodes, edges) -> bool:
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.label)
+        for edge in edges:
+            if edge.color == 'rgba(254, 20, 56, 0.5)':
+                return False
+            else:
+                return bipartite.is_bipartite(G)
+    
     
    

@@ -260,14 +260,16 @@ def main():
             if selected_option == "Procesos":
                 selected_sub_option = st.selectbox(
                     "Seleccionar un proceso:",
-                    ["¿El grafo es bipartito?", "Proceso 2"]
+                    ["¿El grafo es bipartito?", "¿El grafo es bipartito conexo ó disconexo?"]
                 )
                 if selected_sub_option == "¿El grafo es bipartito?":
                     if logGrafo.esBipartito(st.session_state.nodes, st.session_state.edges):
                         st.text("El grafo es bipartito")
                     else:
                         st.text("El grafo no es bipartito")
-                 
+                elif selected_sub_option == "¿El grafo es bipartito conexo ó disconexo?":
+                    salida = logGrafo.esBipartitoConexoOdisconexo(st.session_state.nodes, st.session_state.edges)
+                    st.text(salida)
                     
         elif selected == "Ventana":
             selected_option = st.selectbox(
