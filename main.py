@@ -268,9 +268,13 @@ def main():
                     else:
                         st.text("El grafo no es bipartito")
                 elif selected_sub_option == "¿El grafo es bipartito conexo ó disconexo?":
-                    salida, grafo = logGrafo.esBipartitoConexoOdisconexo(st.session_state.nodes, st.session_state.edges)
-                    st.write(salida)
-                    conexoOdisconexo = True
+                    try:
+                        salida, grafo = logGrafo.esBipartitoConexoOdisconexo(st.session_state.nodes, st.session_state.edges)
+                        st.write(salida)
+                        conexoOdisconexo = True
+                    except Exception as e:
+                        st.write("El grafo no es bipartito")
+
                     
                     
         elif selected == "Ventana":
