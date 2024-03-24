@@ -19,7 +19,7 @@ import random
 import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.algorithms.components import is_connected
-
+from networkx.algorithms.components import is_connected, connected_components
 
 class LogGrafo:
     def __init__(self):
@@ -162,20 +162,34 @@ class LogGrafo:
             return "El grafo no es bipartito"
 
         # verificar si el grafo es conexo o disconexo
-        if is_connected(G):
-            return "El grafo es bipartito y conexo"
+        if nx.is_connected(G):
+            # Pintar todos los nodos del mismo color si el grafo es conexo
+            color_map = ['blue' for _ in G.nodes]
+            nx.set_node_attributes(G, dict(zip(G.nodes, color_map)), 'color')
+            return "El grafo es bipartito y conexo", G
         else:
-            return "El grafo es bipartito y disconexo"
+            # Pintar los nodos de cada subgrafo de diferente color si el grafo es disconexo
+            colors = ['red', 'green', 'blue', 'yellow']  # Lista de colores
+            for i, component in enumerate(nx.connected_components(G)):
+                for node in component:
+                    G.nodes[node]['color'] = colors[i % len(colors)]
+            return "El grafo es bipartito y disconexo", G
+
+    def dibujarGrafo(self, G, st):
+        color_map = [G.nodes[node]['color'] for node in G.nodes]
+        plt.figure(figsize=(8, 6))
+        nx.draw(G, with_labels=True, node_color=color_map)
+        st.pyplot(plt)
 
 
 
     
-    """def guardar_estado(self):
+    def guardar_estado(self):
         # Guardar una copia del estado actual del grafo en el historial
         self.historial.append(copy.deepcopy(self.grafo))
         print(len(self.historial))
 
-    def deshacer_cambio(self):
+    """def deshacer_cambio(self):
         if self.historial:
             # Si hay estados en el historial, establecer el estado actual del grafo al estado más reciente
             self.grafo = self.historial.pop()

@@ -77,7 +77,7 @@ def main():
     logArista = LogArista()
     logGrafo = LogGrafo()
     bandera = False
-    bipartito = False
+    conexoOdisconexo = False
     with st.sidebar:
         st.session_state.directed = None
         selected = option_menu(
@@ -268,8 +268,10 @@ def main():
                     else:
                         st.text("El grafo no es bipartito")
                 elif selected_sub_option == "¿El grafo es bipartito conexo ó disconexo?":
-                    salida = logGrafo.esBipartitoConexoOdisconexo(st.session_state.nodes, st.session_state.edges)
-                    st.text(salida)
+                    salida, grafo = logGrafo.esBipartitoConexoOdisconexo(st.session_state.nodes, st.session_state.edges)
+                    st.write(salida)
+                    conexoOdisconexo = True
+                    
                     
         elif selected == "Ventana":
             selected_option = st.selectbox(
@@ -308,7 +310,12 @@ def main():
         configuracion = Gui(bandera)
         with st.container(border=True):
             agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=configuracion)
-        
+        if conexoOdisconexo:
+            st.header("Componentes del grafo")
+            salida, grafo = logGrafo.esBipartitoConexoOdisconexo(st.session_state.nodes, st.session_state.edges)
+            logGrafo.dibujarGrafo(grafo,st)
+
+             
         
         
 if __name__ == "__main__":
