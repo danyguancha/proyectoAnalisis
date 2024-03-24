@@ -6,14 +6,18 @@ class LogArista:
     def agregarArista(self, Edge,tipo, st):
         if 'edges' not in st.session_state:
             st.session_state.edges = []
-            
+        aux = False
         source_node_id = st.sidebar.selectbox("Nodo de inicio", [node.id for node in st.session_state.nodes])
         target_node_id = st.sidebar.selectbox("Nodo de destino", [node.id for node in st.session_state.nodes])
         weight = st.sidebar.number_input("Peso", min_value=1, max_value=1000)
         if st.sidebar.button("Agregar Arista"):
+            for edge in st.session_state.edges:
+                if edge.color == 'rgba(254, 20, 56, 0.5)':
+                    st.session_state.edges.remove(edge)
             nueva_arista = Edge(source=source_node_id, target=target_node_id, weight=weight, 
-                                label=str(weight), width=3, directed=tipo)
+                            label=str(weight), width=3, directed=tipo)
             st.session_state.edges.append(nueva_arista)
+           
 
             
     def asignarColorArista(self, peso):
