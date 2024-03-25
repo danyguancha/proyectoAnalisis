@@ -13,6 +13,11 @@ from logica.LogArista import LogArista
 from logica.LogGrafo import LogGrafo
 import random
 
+st.set_page_config(
+    page_title="Project ADA",
+    page_icon="./Data/iconos/icon1.webp",
+    layout="wide"
+)
 
 # Función para cargar el grafo desde el archivo y almacenar en la caché
 @st.cache_data()
