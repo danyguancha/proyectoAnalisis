@@ -25,17 +25,19 @@ class LogGrafo:
     def __init__(self):
         self.grafo = {}
         self.historial = []
+        self.estadoAnterior = []
+        self.estadosAnteriores = []
+        
     
     # ========================GENERACIÓN DE GRAFOS=============================================
    
     def generarGrafoDirigido (self, numNodos:int, tipoGrafo, Node, Edge):
         if tipoGrafo == "Grafo dirigido":
             G = nx.gnm_random_graph(numNodos, numNodos, directed=True)
-        #else:
-         #   G = nx.gnm_random_graph(numNodos, numNodos, directed=False)
-        # Agregar etiquetas a los nodos
-        for i in range(numNodos):
-            G.nodes[i]['label'] = f'Nodo {i+1}'
+            G = nx.relabel_nodes(G, {i: i+1 for i in range(numNodos)}) 
+       
+        for i in range(1, numNodos +1):
+            G.nodes[i]['label'] = str(i)
         
         # Agregar pesos a las aristas
         for u, v in G.edges():
@@ -53,44 +55,60 @@ class LogGrafo:
     def generarGrafoCompleto(self, numNodos:int, tipoGrafo, Node, Edge):
         if tipoGrafo == 'Completo':
             G = nx.complete_graph(numNodos)
+            G = nx.relabel_nodes(G, {i: i+1 for i in range(numNodos)}) 
+
         # Agregar etiquetas a los nodos
-        for i in range(numNodos):
-            G.nodes[i]['label'] = f'Nodo {i+1}'
+        for i in range(1, numNodos + 1):
+            G.nodes[i]['label'] =  str(i)
+
         # Agregar pesos a las aristas
         for u, v in G.edges():
             G.edges[u, v]['weight'] = random.randint(1, 1000)
-        
+
         nodes = [Node(str(i), 
                     label=G.nodes[i]['label'], 
                     shape=None,
                     x=random.uniform(0, 900),  # Coordenada x aleatoria
                     y=random.uniform(0, 900))  # Coordenada y aleatoria
-                for i in range(numNodos)]
+                for i in range(1, numNodos + 1)]  # Cambiar el rango para empezar desde 1
+
         edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=False, 
                     type="dotted",weight=G.edges[u, v]['weight']) for u, v in G.edges()]
         return nodes, edges
+
 
         # Funcion para crear un grafo bipartito, donde se puede elegir el numero de nodos de cada conjunto
     def generarGrafoBipartito(self, numNodosConjunto1: int, numNodosConjunto2: int, Node, Edge):
         # Crear un grafo bipartito
         G = nx.complete_bipartite_graph(numNodosConjunto1, numNodosConjunto2)
+        # Cambiar las etiquetas de los nodos para empezar desde 1
+        G = nx.relabel_nodes(G, {i: i+1 for i in range(numNodosConjunto1 + numNodosConjunto2)})
 
         # Agregar etiquetas a los nodos
-        for i in range(numNodosConjunto1 + numNodosConjunto2):
-            G.nodes[i]['label'] = f'Nodo {i+1}'
+        suma = numNodosConjunto1 + numNodosConjunto2
+        for i in range(1, suma + 1):
+            G.nodes[i]['label'] = str(i)
 
         # Agregar pesos a las aristas
         for u, v in G.edges():
             G.edges[u, v]['weight'] = random.randint(1, 1000)
 
-        # Crear una lista de nodos
+        # Definir las posiciones de los nodos en dos columnas verticales
+        pos = {}
+        espacio_vertical = 1000 / (max(numNodosConjunto1, numNodosConjunto2) + 1)
+        for i in range(1, numNodosConjunto1 + 1):
+            pos[i] = [500, i * espacio_vertical]  # Columna izquierda
+        for i in range(numNodosConjunto1 + 1, suma + 1):
+            pos[i] = [900, (i - numNodosConjunto1) * espacio_vertical]  # Columna derecha
+
+        # Crear una lista de nodos con las nuevas coordenadas
         nodes = [Node(str(i), 
                     label=G.nodes[i]['label'],
                     shape=None,
-                    x=random.uniform(0, 900),  # Coordenada x aleatoria
-                    y=random.uniform(0, 900),  # Coordenada y aleatoria
-                    color='blue' if i < numNodosConjunto1 else 'red')  # Color de nodo
-                for i in range(numNodosConjunto1 + numNodosConjunto2)]
+                    x=pos[i][0],  # Coordenada x asignada
+                    y=pos[i][1],  # Coordenada y asignada
+                    color='yellow' if i <= numNodosConjunto1 else 'red')  # Color de nodo
+                for i in range(1, suma + 1)]
 
         # Crear una lista de aristas
         edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=False, 
@@ -181,23 +199,44 @@ class LogGrafo:
         nx.draw(G, with_labels=True, node_color=color_map)
         st.pyplot(plt)
 
-
-
-    
     def guardar_estado(self):
         # Guardar una copia del estado actual del grafo en el historial
         self.historial.append(copy.deepcopy(self.grafo))
-        print(len(self.historial))
+        
+    def guardarEstadoAntesDeCambio(self, nodes, edges):
+        estadoAnterior = copy.deepcopy(nodes), copy.deepcopy(edges)
+        self.estadosAnteriores.append(estadoAnterior)
 
-    """def deshacer_cambio(self):
-        if self.historial:
-            # Si hay estados en el historial, establecer el estado actual del grafo al estado más reciente
-            self.grafo = self.historial.pop()
-            return True
+    def restaurarEstadoAntesDeCambio(self,st):
+        if self.estadosAnteriores:
+            #nodes, edges = self.estadosAnteriores.pop()
+            return self.estadosAnteriores.pop()
         else:
-            # Si no hay estados en el historial, retornar False
-            return False"""
+            st.error("No se puede restaurar el estado anterior porque no hay estado guardado.")
     
+    def obtenerConjuntosGrafoBipartito(self, nodes, edges):
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.weight)
+
+        # Verificar si el grafo es bipartito
+        if not bipartite.is_bipartite(G):
+            return "El grafo no es bipartito"
+
+        # Obtener los nodos de cada conjunto con todos los atributos y aristas conectadas a cada nodo
+        conjuntos = list(bipartite.sets(G))
+        conjunto1 = conjuntos[0]
+        conjunto2 = conjuntos[1]
+
+        # Obtener las aristas que conectan los nodos de los conjuntos
+        aristas = []
+        for u, v in G.edges():
+            if u in conjunto1 and v in conjunto2:
+                aristas.append((u, v))
+        return conjunto1, conjunto2, aristas
 
     # ========================EXPORTACIÓN DE GRAFOS=============================================
 

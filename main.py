@@ -4,13 +4,15 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import networkx as nx
 import os
-from streamlit_agraph import agraph, Node, Edge, Config
+from streamlit_agraph import agraph, Node, Edge
 from streamlit_option_menu import option_menu
 from GUI import Gui
 from lector.LectorArchivo import LectorArchivo
 from logica.LogNodo import LogNodo
 from logica.LogArista import LogArista
 from logica.LogGrafo import LogGrafo
+from logica.Parcial1 import Parcial1
+from logica.ProbabilidadEP import ProbabilidadEP
 import random
 
 st.set_page_config(
@@ -25,7 +27,6 @@ def cargarArchivo(file):
     grafo = LectorArchivo.cargarArchivo(file)
     nodes = []
     edges = []
-    dirigido = grafo.get('directed', False)
 
     # establecer un valor predeterminado para 'directed'
     dirigido = grafo.get('directed', False)
@@ -81,8 +82,13 @@ def main():
     logNodo = LogNodo()
     logArista = LogArista()
     logGrafo = LogGrafo()
+    parcial = Parcial1()
+    probEP = ProbabilidadEP()
     bandera = False
     conexoOdisconexo = False
+    hizoCambio = False
+    boolParcial = False
+    salida = {}
     with st.sidebar:
         st.session_state.directed = None
         selected = option_menu(
@@ -154,7 +160,7 @@ def main():
                     elif tipo_grafo == "No dirigido":
                         bandera = False
                     st.sidebar.header("Agrega Nodo") 
-                    logNodo.agregarNodo(Node, st, logGrafo)
+                    logNodo.agregarNodo(Node, st)
                     st.sidebar.header(" Cambiar Color Nodo")
                     logNodo.cambiarColorNodo(st)
                     st.sidebar.header("Agrega Aristas") 
@@ -171,7 +177,15 @@ def main():
                     numNodosG1 = st.sidebar.number_input("Número de nodos conjunto 1", min_value=0, max_value=100)
                     numNodosG2 = st.sidebar.number_input("Número de nodos conjunto 2", min_value=0, max_value=100)
                     st.session_state.nodes, st.session_state.edges = logGrafo.generarGrafoBipartito(numNodosG1, numNodosG2,Node, Edge)
-                    
+
+                    opp = st.selectbox("Seleccione una opción", [" ", "mostrar Conjuntos"])
+                    if opp == "mostrar Conjuntos":
+                        # permitir al usuario que seleccione el estado actual
+                        estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarEstadosActuales())
+                        st.write(probEP.retornarProbabilidad(st.session_state.nodes, st.session_state.edges, estadoActual))
+
+
+
                    
                                         
             elif selected_option == "Abrir":
@@ -227,39 +241,55 @@ def main():
         if selected == "Editar":
             selected_option = st.selectbox(
                 "Seleccionar opción:",
-                [" ", "Deshacer", "Nodo", "Arista"]
+                [" ", "Nodo", "Arista"]
             )
             #=======================Seccion de nodos=======================
-            if selected_option == "Deshacer":
-                logGrafo.deshacerCambios(st)
-            elif selected_option == "Nodo":
+            
+            
+            logGrafo.guardarEstadoAntesDeCambio(st.session_state.nodes, st.session_state.edges)
+            if selected_option == "Nodo":
                 st.sidebar.header("Nodos")
-                logNodo.agregarNodo(Node, st, logGrafo)
+                st.header("Agregar Nodo")
+                logNodo.agregarNodo(Node, st)
+                st.header("Cambiar Etiqueta Nodo")
                 logNodo.cambiarEtiquetaNodo(st)
+                st.header("Cambiar Color Nodo")
                 logNodo.cambiarColorNodo(st)
+                st.header("Eliminar Nodo")
                 logNodo.eliminarNodo(st)
+                hizoCambio = True
                 
-                    
+             
+                 
             #=======================Seccion de arcos=======================
-            elif selected_option == "Arista":
+            if selected_option == "Arista":
                 st.sidebar.header("Aristas")
+                #listaEstadoAnterior=logGrafo.guardarEstadoAntesDeCambio(st.session_state.nodes, st.session_state.edges)
                 st.header("Agregar Arista")
                 if st.session_state.directed:  # Si el grafo es dirigido
                     bandera=True
                     logArista.agregarArista(Edge, True, st)  # Establece la dirección en True
+                    cambio = True
+                    
                 else:
                     logArista.agregarArista(Edge, False, st)
+                    cambio = True
                 st.header("Cambiar Peso Arista")
                 logArista.cambiarPesoArista(st)
+                cambio = True
                 st.header("Cambiar Color Arista")
                 logArista.cambiarColorArista(st)
+                cambio = True
                 st.header("Eliminar Arista")
                 logArista.eliminarArista(st)
+                cambio = True
+            
+                
    
         if selected == "Ejecutar":
             selected_option = option_menu(
                 menu_title=None,
-                options=["Procesos"]
+                options=[" ","Procesos", "Parcial1 Analisis"]
             )
 
             if selected_option == "Procesos":
@@ -279,6 +309,21 @@ def main():
                         conexoOdisconexo = True
                     except Exception as e:
                         st.write("El grafo no es bipartito")
+            elif selected_option == "Parcial1 Analisis":
+                st.header("Algoritmo Parcial 1 Dany")
+                op = st.selectbox("Seleccione una opción", [" ", "Ejecutar parcial analisis creandro grafo", "Ejecutar parcial"])
+                if op == "Ejecutar parcial analisis creandro grafo":
+                    bandera = True
+                    numNodosG1 = st.sidebar.number_input("Número de nodos conjunto 1", min_value=0, max_value=100)
+                    numNodosG2 = st.sidebar.number_input("Número de nodos conjunto 2", min_value=0, max_value=100)
+                    nodes, edges, salida = parcial.mostrarParticiones(numNodosG1, numNodosG2, Node, Edge)
+                    st.session_state.nodes = nodes
+                    st.session_state.edges = edges
+                    boolParcial = True
+                elif op == "Ejecutar parcial":
+                    bandera = True
+                    salida= parcial.mostrarParticiones2(st.session_state.nodes, st.session_state.edges)                   
+                    boolParcial=True
 
                     
                     
@@ -323,9 +368,16 @@ def main():
             st.header("Componentes del grafo")
             salida, grafo = logGrafo.esBipartitoConexoOdisconexo(st.session_state.nodes, st.session_state.edges)
             logGrafo.dibujarGrafo(grafo,st)
-
-             
-        
+        if boolParcial:
+            st.header("Mejor SubGrafo con el coste minimo de aristas eliminadas:")
+            st.write(salida["mejorSubGrafo"])
+            st.header("Posibles SubGrafos:")
+            st.write(salida["subgrafos"])   
+            st.header("Mas datos")
+            st.session_state.nodes, st.session_state.edges = parcial.mostrarParticiones3(st.session_state.nodes, st.session_state.edges, st)
+            
+            
+    st.write("© 2024 Proyecto ADA. Todos los derechos reservados.") 
         
 if __name__ == "__main__":
     main()

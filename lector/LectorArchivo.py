@@ -5,9 +5,8 @@ from PyPDF2 import PdfFileReader
 
 class LectorArchivo:
 
-    def cargarArchivo(nombreArchivo):
-        #with open(nombreArchivo, "r") as archivo:
-        return json.load(nombreArchivo)
+    def cargarArchivo(self, nombreArchivo):
+        return json.load(open(nombreArchivo, "r"))
         
     def guardarArchivo(nombreArchivo, datos):
         with open(nombreArchivo, "w") as archivo:

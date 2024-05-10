@@ -1,28 +1,30 @@
 import time
 from streamlit_agraph import agraph
-from GUI import Gui
 
 class LogNodo:
     
     
-    def agregarNodo(self, Node, st, logGrafo):
-        
-        all_possible_ids = set(range(1, 1000))
-
+    def agregarNodo(self, Node, st):
         if 'nodes' not in st.session_state:
         # Si no existe, inicializarlo como una lista vacía
             st.session_state.nodes = []
-
+        all_possible_ids = set(range(1, 1000))
         existing_ids = set([node.id for node in st.session_state.nodes])
         available_ids = list(all_possible_ids - existing_ids)
+      
         idNodo = st.sidebar.selectbox("ID del nodo", available_ids)
-        if st.sidebar.button("Agregar Nodo"):
+        
+        if st.sidebar.button("Agregar Nodos"):
 
-            logGrafo.guardar_estado()
-
+            #logGrafo.guardar_estado()
+            
             nuevo_nodo = Node(id=idNodo, size=20, label=str(idNodo), type="circle", color="purple", shape=None)
             st.session_state.nodes.append(nuevo_nodo)
             st.success("Nodo agregado exitosamente!")
+        
+            
+        
+        
     
     def cambiarColorNodo(self, st):
         # Crear un selectbox para seleccionar el nodo
@@ -35,19 +37,25 @@ class LogNodo:
             selected_node = next((node for node in st.session_state.nodes if node.label == selected_node_label), None)
             if selected_node:
                 selected_node.color = selected_color
+                
             else:
                 st.warning("No se ha seleccionado ningún nodo.")
+            
                 
     def eliminarNodo(self, st):
-        selectedNodoEliminar = st.sidebar.selectbox("Eliminar Nodo:", [node.label for node in st.session_state.nodes])
-                
+        
+        selectedNodoEliminar = st.sidebar.selectbox("Eliminar Nodo:", [node.id for node in st.session_state.nodes])
         if st.sidebar.button("Eliminar Nodo"):
             # Lógica para eliminar el nodo seleccionado
-            nodoEliminar = next((node for node in st.session_state.nodes if node.label == selectedNodoEliminar), None)
+            nodoEliminar = next((node for node in st.session_state.nodes if node.id == selectedNodoEliminar), None)
+            
             if nodoEliminar:
                 st.session_state.nodes.remove(nodoEliminar)
+                
             else:
                 st.warning("No se ha seleccionado ningún nodo.")
+
+            
             
     def buscarNodo(self, st):
         selectedNodoBuscar = st.sidebar.selectbox("Buscar Nodo:", [node.label for node in st.session_state.nodes])
@@ -73,6 +81,7 @@ class LogNodo:
             nodoEtiqueta = next((node for node in st.session_state.nodes if node.label == selectedNodoEtiqueta), None)
             if nodoEtiqueta:
                 nodoEtiqueta.label = nuevaEtiqueta
+                
             else:
                 st.warning("No se ha seleccionado ningún nodo.")
-    
+            
