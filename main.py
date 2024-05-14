@@ -11,6 +11,7 @@ from lector.LectorArchivo import LectorArchivo
 from logica.LogNodo import LogNodo
 from logica.LogArista import LogArista
 from logica.LogGrafo import LogGrafo
+from logica.MarginalizarEP import MarginalizarEP
 from logica.Parcial1 import Parcial1
 from logica.ProbabilidadEP import ProbabilidadEP
 import random
@@ -84,6 +85,7 @@ def main():
     logGrafo = LogGrafo()
     parcial = Parcial1()
     probEP = ProbabilidadEP()
+    margEP = MarginalizarEP()
     bandera = False
     conexoOdisconexo = False
     hizoCambio = False
@@ -177,15 +179,15 @@ def main():
                     numNodosG1 = st.sidebar.number_input("Número de nodos conjunto 1", min_value=0, max_value=100)
                     numNodosG2 = st.sidebar.number_input("Número de nodos conjunto 2", min_value=0, max_value=100)
                     st.session_state.nodes, st.session_state.edges = logGrafo.generarGrafoBipartito(numNodosG1, numNodosG2,Node, Edge)
+                    
 
                     opp = st.selectbox("Seleccione una opción", [" ", "mostrar Conjuntos"])
                     if opp == "mostrar Conjuntos":
                         # permitir al usuario que seleccione el estado actual
-                        estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarEstadosActuales())
-                        st.write(probEP.retornarProbabilidad(st.session_state.nodes, st.session_state.edges, estadoActual))
-
-
-
+                        #estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarEstadosActuales())
+                        marginalizar = st.selectbox("Seleccione el estado a marginalizar", margEP.retornarDatosMarginalizar())
+                        st.write(probEP.retornarProbabilidad(st.session_state.nodes, st.session_state.edges, marginalizar))
+                        
                    
                                         
             elif selected_option == "Abrir":
@@ -289,7 +291,7 @@ def main():
         if selected == "Ejecutar":
             selected_option = option_menu(
                 menu_title=None,
-                options=[" ","Procesos", "Parcial1 Analisis"]
+                options=[" ","Procesos", "Parcial1 Analisis","Primera estrategia"]
             )
 
             if selected_option == "Procesos":
@@ -324,6 +326,22 @@ def main():
                     bandera = True
                     salida= parcial.mostrarParticiones2(st.session_state.nodes, st.session_state.edges)                   
                     boolParcial=True
+            elif selected_option == "Primera estrategia":
+                #st.write(margEP.calcularParticionesDelGrafo(st.session_state.nodes, st.session_state.edges))
+                matrizActual, estadoA = probEP.retornarEstadosActuales()
+                futuros = probEP.retornarEstadosFuturos()
+                
+                # Permitir al usuario seleccionar los nodos
+                nodosG1 = st.multiselect('Selecciona los nodos actuales:', matrizActual)
+                nodosG2 = st.multiselect('Selecciona los nodos futuros:', futuros)
+                estadoActual = st.selectbox("Seleccione el estado actual", estadoA)
+                st.session_state.nodes, st.session_state.edges = logGrafo.generar_grafoBipartito(nodosG1, nodosG2, Node, Edge)
+                if st.button("Calcular probabilidad"):
+                    st.write(probEP.retornarProbabilidad(st.session_state.nodes, st.session_state.edges, estadoActual))
+                
+                if st.button("Mostrar particiones del grafo"):
+                    st.write(margEP.calcularParticionesDelGrafo(st.session_state.nodes, st.session_state.edges,estadoActual))
+                
 
                     
                     

@@ -116,6 +116,44 @@ class LogGrafo:
 
         return nodes, edges
     
+    def generar_grafoBipartito(self, nodosG1, nodosG2, Node, Edge):
+        # Crear un grafo bipartito
+        G = nx.Graph()
+        G.add_nodes_from(nodosG1, bipartite=0)
+        G.add_nodes_from(nodosG2, bipartite=1)
+        G.add_edges_from([(n1, n2) for n1 in nodosG1 for n2 in nodosG2])
+
+        # Agregar pesos a las aristas
+        for u, v in G.edges():
+            G.edges[u, v]['weight'] = random.randint(1, 1000)
+
+        # Definir las posiciones de los nodos en dos columnas verticales
+        pos = {}
+        espacio_vertical = 1000 / (max(len(nodosG1), len(nodosG2)) + 1)
+        for i, nodo in enumerate(nodosG1, start=1):
+            pos[nodo] = [500, i * espacio_vertical]  # Columna izquierda
+        for i, nodo in enumerate(nodosG2, start=1):
+            pos[nodo] = [900, i * espacio_vertical]  # Columna derecha
+
+        # Crear una lista de nodos con las nuevas coordenadas
+        nodes = [Node(id=str(nodo), 
+                    label=str(nodo),
+                    shape=None,
+                    x=pos[nodo][0],  # Coordenada x asignada
+                    y=pos[nodo][1],  # Coordenada y asignada
+                    color='red' if nodo in nodosG1 else 'yellow')  # Color de nodo
+                for nodo in G.nodes()]
+
+        # Crear una lista de aristas
+        edges = [Edge(source=str(u), target=str(v), label=str(G.edges[u, v]['weight']), weight=G.edges[u, v]['weight'], type="CURVE_SMOOTH",width=3, directed=True)
+                for u, v in G.edges()]
+
+        # Retornar los nodos y aristas
+        return nodes, edges
+
+
+
+    
     # ========================OPERACIONES CON GRAFOS=============================================
     
     def esCompleto(self, numNodos: int, numAristas: int) -> bool:
@@ -230,13 +268,9 @@ class LogGrafo:
         conjuntos = list(bipartite.sets(G))
         conjunto1 = conjuntos[0]
         conjunto2 = conjuntos[1]
+        return conjunto1, conjunto2, edges
 
-        # Obtener las aristas que conectan los nodos de los conjuntos
-        aristas = []
-        for u, v in G.edges():
-            if u in conjunto1 and v in conjunto2:
-                aristas.append((u, v))
-        return conjunto1, conjunto2, aristas
+    
 
     # ========================EXPORTACIÓN DE GRAFOS=============================================
 
