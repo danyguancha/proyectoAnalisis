@@ -328,19 +328,27 @@ def main():
                     boolParcial=True
             elif selected_option == "Primera estrategia":
                 #st.write(margEP.calcularParticionesDelGrafo(st.session_state.nodes, st.session_state.edges))
-                matrizActual, estadoA = probEP.retornarEstadosActuales()
-                futuros = probEP.retornarEstadosFuturos()
-                
+                futuros  = probEP.retornarEstadosFuturos() 
+                estados = probEP.retornarEstados()
                 # Permitir al usuario seleccionar los nodos
-                nodosG1 = st.multiselect('Selecciona los nodos actuales:', matrizActual)
+                nodosG1 = st.multiselect("Seleccione una opción",estados)
                 nodosG2 = st.multiselect('Selecciona los nodos futuros:', futuros)
-                estadoActual = st.selectbox("Seleccione el estado actual", estadoA)
+                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual())
                 st.session_state.nodes, st.session_state.edges = logGrafo.generar_grafoBipartito(nodosG1, nodosG2, Node, Edge)
+                aux2 =[]
+                for i in nodosG2:
+                    # verificar si el dato tiene ' al final por ejemplo "1'"
+                    if "'" in i:
+                        aux2.append(i[:-1])
+
+
                 if st.button("Calcular probabilidad"):
-                    st.write(probEP.retornarProbabilidad(st.session_state.nodes, st.session_state.edges, estadoActual))
+                    print(probEP.retornarEstados())
+                    aux = probEP.retornarDistribucion(nodosG1, aux2, estadoActual)
+                    
+                    st.write(aux)
+                #-------------
                 
-                if st.button("Mostrar particiones del grafo"):
-                    st.write(margEP.calcularParticionesDelGrafo(st.session_state.nodes, st.session_state.edges,estadoActual))
                 
 
                     

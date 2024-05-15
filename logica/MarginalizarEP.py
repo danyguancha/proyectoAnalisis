@@ -58,6 +58,7 @@ class MarginalizarEP:
         conjunto1, conjunto2, aristas = LogGrafo().obtenerConjuntosGrafoBipartito(nodes, edges)
         particiones = self.posiblesParticiones(conjunto1, conjunto2)
         return particiones
+    
 
     def posiblesParticiones(self, c1, c2):
         c1 = list(c1)  # Convertir el conjunto c1 a lista
