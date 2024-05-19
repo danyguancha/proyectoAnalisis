@@ -11,7 +11,6 @@ from lector.LectorArchivo import LectorArchivo
 from logica.LogNodo import LogNodo
 from logica.LogArista import LogArista
 from logica.LogGrafo import LogGrafo
-from logica.MarginalizarEP import MarginalizarEP
 from logica.Parcial1 import Parcial1
 from logica.ProbabilidadEP import ProbabilidadEP
 import random
@@ -85,11 +84,11 @@ def main():
     logGrafo = LogGrafo()
     parcial = Parcial1()
     probEP = ProbabilidadEP()
-    margEP = MarginalizarEP()
+
     bandera = False
     conexoOdisconexo = False
-    hizoCambio = False
     boolParcial = False
+    mostrarProbabilidad = False
     salida = {}
     with st.sidebar:
         st.session_state.directed = None
@@ -180,15 +179,6 @@ def main():
                     numNodosG2 = st.sidebar.number_input("Número de nodos conjunto 2", min_value=0, max_value=100)
                     st.session_state.nodes, st.session_state.edges = logGrafo.generarGrafoBipartito(numNodosG1, numNodosG2,Node, Edge)
                     
-
-                    opp = st.selectbox("Seleccione una opción", [" ", "mostrar Conjuntos"])
-                    if opp == "mostrar Conjuntos":
-                        # permitir al usuario que seleccione el estado actual
-                        #estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarEstadosActuales())
-                        marginalizar = st.selectbox("Seleccione el estado a marginalizar", margEP.retornarDatosMarginalizar())
-                        st.write(probEP.retornarProbabilidad(st.session_state.nodes, st.session_state.edges, marginalizar))
-                        
-                   
                                         
             elif selected_option == "Abrir":
                 if st.session_state.directed == None:
@@ -327,14 +317,14 @@ def main():
                     salida= parcial.mostrarParticiones2(st.session_state.nodes, st.session_state.edges)                   
                     boolParcial=True
             elif selected_option == "Primera estrategia":
-                #st.write(margEP.calcularParticionesDelGrafo(st.session_state.nodes, st.session_state.edges))
                 futuros  = probEP.retornarEstadosFuturos() 
                 estados = probEP.retornarEstados()
                 # Permitir al usuario seleccionar los nodos
-                nodosG1 = st.multiselect("Seleccione una opción",estados)
-                nodosG2 = st.multiselect('Selecciona los nodos futuros:', futuros)
-                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual())
+                nodosG1 = st.multiselect("Seleccione los nodos del estado presente",estados)
+                nodosG2 = st.multiselect('Seleccione los nodos del estado futuro:', futuros)
+                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(nodosG1))
                 st.session_state.nodes, st.session_state.edges = logGrafo.generar_grafoBipartito(nodosG1, nodosG2, Node, Edge)
+                bandera = True
                 aux2 =[]
                 for i in nodosG2:
                     # verificar si el dato tiene ' al final por ejemplo "1'"
@@ -343,11 +333,8 @@ def main():
 
 
                 if st.button("Calcular probabilidad"):
-                    print(probEP.retornarEstados())
-                    aux = probEP.retornarDistribucion(nodosG1, aux2, estadoActual)
+                    mostrarProbabilidad = True
                     
-                    st.write(aux)
-                #-------------
                 
                 
 
@@ -401,6 +388,24 @@ def main():
             st.write(salida["subgrafos"])   
             st.header("Mas datos")
             st.session_state.nodes, st.session_state.edges = parcial.mostrarParticiones3(st.session_state.nodes, st.session_state.edges, st)
+        
+        if mostrarProbabilidad:
+            aux = probEP.retornarDistribucion(nodosG1, aux2, estadoActual, st)
+            # Convierte las listas a cadenas
+            nodosG1_str = ', '.join(nodosG1)
+            aux2_str = ', '.join(aux2)
+            # Muestra la fórmula de probabilidad condicional con los valores de las variables
+            st.latex(r'P(\{' + aux2_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
+            st.header("Distribución de probabilidad")
+            st.table(aux)
+            st.header("Particiones del grafo")
+            particionesGrafo, particiones  = probEP.generarParticiones(nodosG1, nodosG2)
+            st.table(particionesGrafo)
+            st.header("Mejor particion del grafo")
+            particion, valor, st.session_state.nodes, st.session_state.edges = probEP.retornarMejorParticion(nodosG1, aux2,estadoActual, st.session_state.nodes, st.session_state.edges,st)
+            st.header("Diferencia de la Mejor partición")
+            st.write(valor)
+           
             
             
     st.write("© 2024 Proyecto ADA. Todos los derechos reservados.") 

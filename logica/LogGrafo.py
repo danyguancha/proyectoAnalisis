@@ -436,6 +436,7 @@ class LogGrafo:
         # Mostrar la matriz de adyacencia en Streamlit
         st.write("Matriz de adyacencia")
         st.write(matriz_adyacencia)
+        return matriz_adyacencia
 
     # Funcion para deshacer los cambios que se hayan hecho en el grafo, por ejemplo eliminar una arista volver a dejarla como estaba hasta antes de eliminarla, etc...
     def deshacerCambios(self,  st):
