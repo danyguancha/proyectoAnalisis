@@ -258,34 +258,6 @@ class ProbabilidadEP:
             return tabla[estadoActual]
         
         return helper(c1, c2, estadoActual)
-        """
-        for i in range(len(lista_particiones)):
-            #lista_particiones[i][0] = [sublist for sublist in lista_particiones[i][0] if sublist]
-            #lista_particiones[i][1] = [sublist for sublist in lista_particiones[i][1] if sublist]
-            
-            if [] in lista_particiones[i][0]:
-                lista_particiones[i][0].remove([])
-                lista_particiones[i][0][0].append("")
-                if len(lista_particiones[i][0]) > 1:
-                    a = lista_particiones[i][0][1]
-                    print(a)
-                
-
-            a = lista_particiones[i][0][0]
-            
-            # eliminar aristas de la particion
-            for arista in edges:
-                if arista.source in a[1]:
-                    arista.dashes = True
-                    arista.color = 'rgba(254, 20, 56, 0.5)'"""
-                
-         
-        
-               
-        #agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui(False))
-        
-                
-        #return particion, diferencia, nodes, edges
     
     def convertir_a_listas(self, datos):
         lineas = datos.split('\n')
@@ -317,8 +289,8 @@ class ProbabilidadEP:
         cost_matrix = np.abs(np.subtract.outer(p1, p2))
         salida = np.sum(np.min(cost_matrix, axis=1) * p1)
         return salida
-
-        
+    
+            
     def producto_tensor(self, p1, p2):
         p1 = np.array(p1)
         p2 = np.array(p2)
