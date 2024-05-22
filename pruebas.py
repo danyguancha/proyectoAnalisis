@@ -1,25 +1,20 @@
-def producto_tensor_vector_recursivo(vector_a, vector_b, i=0,vector_resultado = None):
+import numpy as np
+
+def calcularEMD(p1, p2):
+    p1 = np.array(p1)
+    p2 = np.array(p2)
     
-    if vector_resultado is None:
-        vector_resultado = []
+    cost_matrix = np.abs(np.subtract.outer(p1, p2))
+    return np.sum(np.min(cost_matrix, axis=1) * p1)
 
-    if i == len(vector_a):
-        return vector_resultado
-    else:
-        aux2 = []
-        for j in range(len(vector_b)):
-            aux2.append(vector_a[i] * vector_b[j]) 
-        producto_tensor_vector_recursivo(vector_a, aux2, i + 1, vector_resultado)
-        vector_resultado.append(aux2)
-        return vector_resultado[0]
+def producto_tensor(p1, p2):
+    p1 = np.array(p1)
+    p2 = np.array(p2)
+    return np.outer(p1, p2)
 
-        
-    
+p1 = [0, 0, 0, 0, 1, 0, 0, 0]
+p2 = [0.25, 0.25]
 
-# Ejemplo de uso
-particion1 = [0.5, 0.5]
-particion2 = [0.5, 0.0]
-
-resultado = producto_tensor_vector_recursivo(particion1, particion2)
-
-print(resultado)
+print(f"Producto tensor de {p1} y {p2}:")
+print(producto_tensor(p1, p2))
+print(f"EMD entre {p1} y {p2}: {calcularEMD(p1, p2)}")

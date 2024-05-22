@@ -27,7 +27,7 @@ class ProbabilidadEP:
             filtro2 = self.porcentajeDistribucion(nuevaTabla, indice, num)
             probabilidadesDistribuidas.append(filtro2)
         tabla = self.generarTabla(probabilidadesDistribuidas, num)
-        tabla[0] = [f"{estadoActual} | {estadoFuturo}"] + tabla[0]
+        tabla[0] = [f"{estadoFuturo} | {estadoActual}"] + tabla[0]
         tabla[1] = [num] + tabla[1]
         return tabla
     
@@ -43,14 +43,9 @@ class ProbabilidadEP:
         
     def porcentajeDistribucion(self, tabla, indice, num):
         tablaNueva = [tabla[0]]
-        #tabla1 = [fila for fila in tabla if all(i < len(fila[0]) and fila[0][pos] == num[i] for i, pos in enumerate(indice))]
-        fila = None  # Valor por defecto
+        fila = None
         try:
-            tabla1 = [
-                fila for fila in tabla if all(
-                    i < len(num) and pos < len(fila[0]) and fila[0][pos] == num[i] for i, pos in enumerate(indice)
-                )
-            ]
+            tabla1 = [fila for fila in tabla[1:] if all(i < len(num) and pos < len(fila[0]) and fila[0][pos] == num[i] for i, pos in enumerate(indice))]
         except IndexError as e:
             print(f"IndexError: {e}")
             raise
@@ -59,9 +54,9 @@ class ProbabilidadEP:
         for i in tabla1:
             nuevosValores[0] += i[1]
             nuevosValores[1] += i[2]
-        
 
-        nuevosValores = [v / len(tabla1) for v in nuevosValores] 
+        total = sum(nuevosValores)
+        nuevosValores = [v / total if total != 0 else v for v in nuevosValores]
         nuevaFila = [num, *nuevosValores]
         tablaNueva.append(nuevaFila)
         return tablaNueva
@@ -87,7 +82,6 @@ class ProbabilidadEP:
                 aux(i + 1)
                 estado_actual[i] = 1
                 aux(i + 1)
-
         aux(0)
         return transiciones, estados 
     
@@ -110,13 +104,13 @@ class ProbabilidadEP:
         df = pd.DataFrame(datos[1:], columns=lista)
         return df
     
-    def retornarValorActual(self, c1):
+    def retornarValorActual(self, c1, c2):
         datos = self.datosMatrices()
         lista =[]
-        if len(c1) == 1:
+        if len(c1) == 1 :
             lista.append((0,))
             lista.append((1,))
-        elif len(c1) == 2:
+        elif len(c1) == 2 :
             lista.append((0,0))
             lista.append((0,1))
             lista.append((1,0))
@@ -137,32 +131,24 @@ class ProbabilidadEP:
 
         return estados
             
-    def generarParticiones(self, conjunto1, conjunto2):
+    def generarParticiones(self, c1, c2, estadoActual):
+        matrices = self.datosMatrices()
         particiones = []
-               
-        # Generar todas las combinaciones posibles de elementos del primer conjunto
-        for i in range(len(conjunto1) + 1):
-            combos1 = combinations(conjunto1, i)
-            # Agregar la partición a la lista de particiones
-            for c1 in combos1:
-                particion1 = [list(c1), sorted(list(set(conjunto1) - set(c1)) + list(set(conjunto2)))]
-                particiones.append(particion1)
+        resultado, estados = self.generarEstadoTransicion(matrices)
+        distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
+        combinaciones = self.generarCombinaciones(distribucionProbabilidadOriginal[0][1], distribucionProbabilidadOriginal[1][0])
 
-        for i in range(len(conjunto2) + 1):
-            combos2 = combinations(conjunto2, i)
-            # Agregar la partición a la lista de particiones
-            for c2 in combos2:
-                particion2 = [list(c2), sorted(list(set(conjunto2) - set(c2)) + list(set(conjunto1)))]
-                particiones.append(particion2)
-        # eliminar si hay particiones vacias
-        
-        n = len(conjunto1)
-        for i, particion in enumerate(particiones):
-            particiones[i].append(tuple(j % 2 for j in range(n)))
-            
-        particiones = [tuple(p) for p in particiones]
-        particiones = [p for p in particiones if p[0] and p[1]]
-        df = pd.DataFrame(particiones, columns=['Conjunto 1', 'Conjunto 2', 'Estado'])
+        particioness = self.generarProbParticiones(distribucionProbabilidadOriginal, combinaciones)
+        listaDf =[]
+        for i in particioness:
+            aux = self.convertir_a_listas(i)
+            for j in aux:
+                conjunto1 = j[0][1] if j[0][1] else {}
+                conjunto2 = j[1][1] if j[1][1] else {}
+                particiones.append(((conjunto1, '|', j[0][0]), (conjunto2, '|', j[1][0])))
+                #particiones.append((conjunto2, '|', j[1][0]))
+                listaDf.append([(conjunto1, ' | ', j[0][0]), (conjunto2, ' | ', j[1][0])])
+        df = pd.DataFrame(listaDf, columns=['Conjunto 1', 'Conjunto 2']).astype(str)
         return df, particiones
     
     def particiones(self, listaDistribuida, eAcual1, eActual2, eFuturo1, eFuturo2):
@@ -173,16 +159,12 @@ class ProbabilidadEP:
         i1 ={}
         i2 ={}
         for num, fila in enumerate(listaDistribuida[0][1:], start=1):
-            auxNuevaTabla1 = tuple(fila[i-1] for i in eFuturo1)
-            auxNuevaTabla2 = tuple(fila[i-1] for i in eFuturo2)
-            
-
+            auxNuevaTabla1 = tuple(fila[i] for i in eFuturo1)
+            auxNuevaTabla2 = tuple(fila[i] for i in eFuturo2)
             self.actualizarTabla(i1, auxNuevaTabla1, listaNueva1, num)
             self.actualizarTabla(i2, auxNuevaTabla2, listaNueva2, num)
-        
         listaAux1 = [p1] + self.calcularPromedio(i1, listaDistribuida)
         listaAux2 = [p2] + self.calcularPromedio(i2, listaDistribuida)
-
         listaSalida1 = [['Key'] + listaNueva1, listaAux1]
         listaSalida2 = [['Key'] + listaNueva2, listaAux2]
         return listaSalida1, listaSalida2
@@ -190,7 +172,6 @@ class ProbabilidadEP:
     def calcularPromedio(self, indices, listaDistribuida):
         return [sum(listaDistribuida[1][j] for j in indices[i])/len(indices[i]) if indices[i] else 0 for i in indices]
     
-   
     def actualizarTabla(self, indices, auxNuevaLista, listaNueva, num):
         if auxNuevaLista not in indices:
             indices[auxNuevaLista] = [num]
@@ -198,7 +179,6 @@ class ProbabilidadEP:
         else:
             indices[auxNuevaLista].append(num) 
 
-    
     def generarCombinaciones(self, c1, c2):
         conjunto1 = [comb for i in range(len(c1)+1) for comb in combinations(range(len(c1)), i)]
         conjunto2 = [comb for i in range(len(c2)+1) for comb in combinations(range(len(c2)), i)]
@@ -219,7 +199,6 @@ class ProbabilidadEP:
         
         for i in combinaciones[1:]:
             lista = self.particiones(distribuciones, i[0][0], i[1][0], i[0][1], i[1][1])
-
             nombre = "("
             for j in i[0][0]:
                 if j < len(lista1):
@@ -239,47 +218,47 @@ class ProbabilidadEP:
                     nombre += f" {lista2[j]}"
                     pass
             nombre += " )"
-
             tablaDeparticiones[nombre] = lista
         return tablaDeparticiones
     
     def retornarMejorParticion(self, c1, c2, estadoActual, nodes, edges,st):
-        #df, particiones = self.generarParticiones(c1, c2)
+        tabla = {}
         matrices = self.datosMatrices()
-        resultado, estados = self.generarEstadoTransicion(matrices)
-       
-        distribucionProbabilidad = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)# Original
-        combinaciones = self.generarCombinaciones(c1, c2) # Combinaciones de particiones posibles de la original
-        particioness = self.generarProbParticiones(distribucionProbabilidad, combinaciones)
+
+        def helper(c1, c2, estadoActual):
+            # Check if the result is already computed
+            if estadoActual in tabla:
+                return tabla[estadoActual]
+            resultado, estados = self.generarEstadoTransicion(matrices)
+            distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
+            combinaciones = self.generarCombinaciones(distribucionProbabilidadOriginal[0][1], distribucionProbabilidadOriginal[1][0])
+
+            particioness = self.generarProbParticiones(distribucionProbabilidadOriginal, combinaciones)
+            probabilidades = {}
+            for i in particioness:
+                aux = self.convertir_a_listas(i)
+                for j in aux:
+                    distribucion1 = self.generarDistribucionProbabilidades(matrices, j[0][0], j[0][1], estadoActual, estados)
+                    distribucion2 = self.generarDistribucionProbabilidades(matrices, j[1][0], j[1][1], estadoActual, estados)
+                probabilidades[i]= distribucion1 + distribucion2
+            menor = float('inf')
+            mejor_particion = None
+            aux={}
+            for i in probabilidades:
+                p1 = probabilidades[i][1][1:]
+                p2 = probabilidades[i][3][1:]
+                prodTensor = self.producto_tensor(p1, p2)
+                diferencia = self.calcularEMD(distribucionProbabilidadOriginal[1][1:], prodTensor)
+                aux2 = self.convertir_a_listas(i)
+                for j in aux2:
+                    if diferencia < menor and (j[0][0] != c1 and j[0][1]!=c2):
+                        menor = diferencia
+                        mejor_particion = i
+            tabla[estadoActual] = (menor, mejor_particion)
+            return tabla[estadoActual]
         
-        menor = float('inf')
-        particion = []
-        particionesMenores = {}
-        part ={}
-        for i in particioness:
-            
-            particion1 = particioness[i][0][1][1:]
-            particion2 = particioness[i][1][1][1:]
-            prodTensor = self.producto_tensor(particion1, particion2)
-            diferencia = min(self.calcularEMD(distribucionProbabilidad[1][1:], prodTensor))
-            part[i] = diferencia
-        
-        for i in part:
-            if part[i] < menor:
-                menor = part[i]
-           
-        for i in part:
-            if part[i] == menor:
-                particionesMenores[i] = part[i]
-        lista_particiones = []
-        for particion, probabilidad in particionesMenores.items():
-            partes = particion.split('-')
-            particion1 = re.findall(r'\((.*?)\)', partes[0].strip())
-            particion2 = re.findall(r'\((.*?)\)', partes[1].strip())
-            particion1 = [list(p.split()) if p else [""] for p in particion1]
-            particion2 = [list(p.split()) if p else [""] for p in particion2]
-            lista_particiones.append([particion1, particion2, probabilidad])
-        
+        return helper(c1, c2, estadoActual)
+        """
         for i in range(len(lista_particiones)):
             #lista_particiones[i][0] = [sublist for sublist in lista_particiones[i][0] if sublist]
             #lista_particiones[i][1] = [sublist for sublist in lista_particiones[i][1] if sublist]
@@ -292,93 +271,56 @@ class ProbabilidadEP:
                     print(a)
                 
 
-            print(lista_particiones[i][0])
             a = lista_particiones[i][0][0]
-            #print(a)
+            
             # eliminar aristas de la particion
             for arista in edges:
-                if arista.source in lista_particiones[i][0][0] :
+                if arista.source in a[1]:
                     arista.dashes = True
-                    arista.color = 'rgba(254, 20, 56, 0.5)'
+                    arista.color = 'rgba(254, 20, 56, 0.5)'"""
                 
          
         
                
-        agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui(False))
+        #agraph(nodes=st.session_state.nodes, edges=st.session_state.edges, config=Gui(False))
         
                 
-        return particion, diferencia, nodes, edges
+        #return particion, diferencia, nodes, edges
     
-    
+    def convertir_a_listas(self, datos):
+        lineas = datos.split('\n')
+        listas = []
+        for linea in lineas:
+            grupos = linea.split(' - ')
+            grupos_listas = []
+            for grupo in grupos:
+                subgrupos = grupo.split(') (')
+                subgrupos = [subgrupo.replace("(", "").replace(")", "").strip() for subgrupo in subgrupos]
+                subgrupos_listas = [subgrupo.split() if subgrupo else [] for subgrupo in subgrupos]
+                grupos_listas.append(subgrupos_listas)
+            listas.append(grupos_listas)
+        return listas
+
     
     def calcularEMD(self, p1, p2):
-        # Convertir las listas a arreglos de numpy si es necesario
         p1 = np.array(p1)
         p2 = np.array(p2)
+
+        # Asegúrate de que p1 y p2 sean unidimensionales
+        if p1.ndim != 1 or p2.ndim != 1:
+            raise ValueError("p1 y p2 deben ser arrays unidimensionales")
+
+        # Ajusta p2 para que tenga la misma longitud que p1
+        if len(p1) != len(p2):
+            p2 = np.interp(np.linspace(0, 1, len(p1)), np.linspace(0, 1, len(p2)), p2)
         
-        # Calcular la diferencia de probabilidad utilizando EMD
-        diferencias = [wasserstein_distance(p1, p2_row) for p2_row in p2]
-        
-        return diferencias
+        cost_matrix = np.abs(np.subtract.outer(p1, p2))
+        salida = np.sum(np.min(cost_matrix, axis=1) * p1)
+        return salida
 
-
-
-    
-
-    def productoTensor(self,vector_a, vector_b, i=0,vector_resultado = None):
-    
-        if vector_resultado is None:
-            vector_resultado = []
-
-        if i == len(vector_a):
-            return vector_resultado
-        else:
-            aux2 = []
-            for j in range(len(vector_b)):
-                aux2.append(vector_a[i] * vector_b[j]) 
-            self.productoTensor(vector_a, aux2, i + 1, vector_resultado)
-            vector_resultado.append(aux2)
-            return vector_resultado[0]
         
     def producto_tensor(self, p1, p2):
-        """
-        Calcula el producto tensor de dos particiones de probabilidades.
-        
-        Argumentos:
-        p1 -- Lista o arreglo de numpy con la primera partición de probabilidades.
-        p2 -- Lista o arreglo de numpy con la segunda partición de probabilidades.
-        
-        Retorna:
-        Un arreglo de numpy con el producto tensor de las particiones de probabilidades.
-        """
-        # Convertir las listas a arreglos de numpy si es necesario
         p1 = np.array(p1)
         p2 = np.array(p2)
+        return np.outer(p1, p2).flatten()
         
-        # Calcular el producto tensor
-        resultado = np.outer(p1, p2)
-        
-        return resultado
-        
-    
-    
-[['(', ')', '(', '1', ')'], ['(', '1', '2', ')', '(', '2', ')'], 0.1875]
-[['()','(1)'],['(1, 2)','(2)'],0.1875]
-
-[[' ', ' 1 '], [' 1 2 ', ' 2 '], 0.1875]
-[[[''], ['1']], [['1','2'], ['2']], 0.1875]
-        
-        
-
-a = ProbabilidadEP()
-#print(a.retornarDistribucion(['1','2','3'], ['1','2','3'], (1, 0, 0)))
-
-
-[(['1', '2', '2', '3', '3'], ['1'], [(0, 0, 0, 0, 0), (0, 0, 0, 0, 1), (0, 0, 0, 1, 0), (0, 0, 0, 1, 1), (0, 0, 1, 0, 0),
-(0, 0, 1, 0, 1), (0, 0, 1, 1, 0), (0, 0, 1, 1, 1), (0, 1, 0, 0, 0), (0, 1, 0, 0, 1), (0, 1, 0, 1, 0), (0, 1, 0, 1, 1), 
-(0, 1, 1, 0, 0), (0, 1, 1, 0, 1), (0, 1, 1, 1, 0), (0, 1, 1, 1, 1), (1, 0, 0, 0, 0), (1, 0, 0, 0, 1), (1, 0, 0, 1, 0), 
-(1, 0, 0, 1, 1), (1, 0, 1, 0, 0), (1, 0, 1, 0, 1), (1, 0, 1, 1, 0), (1, 0, 1, 1, 1), (1, 1, 0, 0, 0), (1, 1, 0, 0, 1), 
-(1, 1, 0, 1, 0), (1, 1, 0, 1, 1), (1, 1, 1, 0, 0), (1, 1, 1, 0, 1), (1, 1, 1, 1, 0), (1, 1, 1, 1, 1)]), 
-[(1, 0, 0), 0.015625, 0.015625, 0.015625, 0.015625, 0.015625, 0.015625, 0.015625, 0.015625, 0.015625, 0.015625, 0.015625, 
- 0.015625, 0.015625, 0.015625, 0.015625, 0.015625, 0.046875, 0.046875, 0.046875, 0.046875, 0.046875, 0.046875, 0.046875, 
- 0.046875, 0.046875, 0.046875, 0.046875, 0.046875, 0.046875, 0.046875, 0.046875, 0.046875]]   

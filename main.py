@@ -322,7 +322,7 @@ def main():
                 # Permitir al usuario seleccionar los nodos
                 nodosG1 = st.multiselect("Seleccione los nodos del estado presente",estados)
                 nodosG2 = st.multiselect('Seleccione los nodos del estado futuro:', futuros)
-                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(nodosG1))
+                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(nodosG1, nodosG2))
                 st.session_state.nodes, st.session_state.edges = logGrafo.generar_grafoBipartito(nodosG1, nodosG2, Node, Edge)
                 bandera = True
                 aux2 =[]
@@ -334,12 +334,7 @@ def main():
 
                 if st.button("Calcular probabilidad"):
                     mostrarProbabilidad = True
-                    
-                
-                
-
-                    
-                    
+       
         elif selected == "Ventana":
             selected_option = st.selectbox(
                 "Seleccionar opción:",
@@ -399,12 +394,14 @@ def main():
             st.header("Distribución de probabilidad")
             st.table(aux)
             st.header("Particiones del grafo")
-            particionesGrafo, particiones  = probEP.generarParticiones(nodosG1, nodosG2)
-            st.table(particionesGrafo)
+            df, particiones  = probEP.generarParticiones(aux2, nodosG1, estadoActual)
+            st.table(df)
             st.header("Mejor particion del grafo")
-            particion, valor, st.session_state.nodes, st.session_state.edges = probEP.retornarMejorParticion(nodosG1, aux2,estadoActual, st.session_state.nodes, st.session_state.edges,st)
-            st.header("Diferencia de la Mejor partición")
-            st.write(valor)
+            
+            particion = probEP.retornarMejorParticion(aux2, nodosG1,estadoActual, st.session_state.nodes, st.session_state.edges,st)
+            st.write(particion)
+            
+
            
             
             
