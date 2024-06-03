@@ -25,7 +25,7 @@ class ProbabilidadEP:
             # verificar si i tiene "'", si es así, se elimina la comilla
             if "'" in i:
                 i = i[:-1]
-                nuevaTabla = self.generarTablaComparativa(tabla[i])
+            nuevaTabla = self.generarTablaComparativa(tabla[i])
             filtro2 = self.porcentajeDistribucion(nuevaTabla, indice, num)
             probabilidadesDistribuidas.append(filtro2)
         tabla = self.generarTabla(probabilidadesDistribuidas, num)

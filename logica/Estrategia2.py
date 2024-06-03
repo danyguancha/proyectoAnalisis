@@ -43,6 +43,8 @@ class Estrategia2:
             
             distribucion_izq = p.generarDistribucionProbabilidades(matrices, tuple(c1_izq), tuple(c2_izq), estadoActual, estados)
             distribucion_der = p.generarDistribucionProbabilidades(matrices, tuple(c1_der), tuple(c2_der), estadoActual, estados)
+            print(distribucion_izq)
+            print(distribucion_der)
             p1 = distribucion_izq[1][1:]
             p2 = distribucion_der[1][1:]
            

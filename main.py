@@ -423,7 +423,7 @@ def main():
             st.write(str(particionn), diferencia, tiempo)
             st.header("Particiones del grafo")
             df, particiones  = estra2.generarParticiones(c1, c2, estadoActual, st.session_state.edges)
-            st.table(df)
+            #st.table(df)
             
            
 
