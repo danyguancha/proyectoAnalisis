@@ -110,36 +110,7 @@ class Parcial1:
 
     def mostrarParticiones3(self, nodes, edges, st):
         todosLosSubgrafos = self.generarConjuntosConPeso(nodes, edges)
-        """G = nx.Graph()
-        G.add_nodes_from(subgrafo["G1"])
-        G.add_nodes_from(subgrafo["G2"])
-        for arista in subgrafo["AristasNoConsideradas"]:
-            nodo1, nodo2 = arista.split("=>")
-            G.add_edge(nodo1.strip(), nodo2.strip())
-
-        pos = nx.spring_layout(G)  # Posiciones para todos los nodos
-        nx.draw_networkx_nodes(G, pos, nodelist=subgrafo["G1"], node_color="r", label="Conjunto 1")
-        nx.draw_networkx_nodes(G, pos, nodelist=subgrafo["G2"], node_color="b", label="Conjunto 2")
-        nx.draw_networkx_edges(G, pos, edgelist=G.edges(), width=1.0, alpha=0.5)
-        nx.draw_networkx_labels(G, pos, font_size=8)
-
-        plt.title("Subgrafo")
-        plt.axis("off")
-        plt.legend()
-        st.pyplot(plt)"""
-        """G = nx.Graph()
-        for node in mejorGrafo.nodes():
-            G.add_node(node.id, label=node.label)
-        for edge in mejorGrafo.edges():
-            G.add_edge(edge.source, edge.to, weight=edge.label)
-        # Dibujar el grafo con matplotlib
-        fig, ax = plt.subplots()
-        pos = nx.spring_layout(G,scale=2)#
-        nx.draw(G,pos , with_labels=True, ax=ax)
-        edge_labels = nx.get_edge_attributes(G, 'weight')#
-        nx.draw_networkx_edge_labels(G,pos, edge_labels=edge_labels, ax=ax)#
-        # Mostrar la figura en Streamlit
-        st.pyplot(fig)"""
+        return todosLosSubgrafos
             
             
 

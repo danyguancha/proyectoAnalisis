@@ -13,6 +13,7 @@ from logica.LogArista import LogArista
 from logica.LogGrafo import LogGrafo
 from logica.Parcial1 import Parcial1
 from logica.ProbabilidadEP import ProbabilidadEP
+from logica.Estrategia2 import Estrategia2
 import random
 
 st.set_page_config(
@@ -84,11 +85,13 @@ def main():
     logGrafo = LogGrafo()
     parcial = Parcial1()
     probEP = ProbabilidadEP()
+    estra2 = Estrategia2()
 
     bandera = False
     conexoOdisconexo = False
     boolParcial = False
     mostrarProbabilidad = False
+    estrategia2 = False
     salida = {}
     with st.sidebar:
         st.session_state.directed = None
@@ -281,7 +284,7 @@ def main():
         if selected == "Ejecutar":
             selected_option = option_menu(
                 menu_title=None,
-                options=[" ","Procesos", "Parcial1 Analisis","Primera estrategia"]
+                options=[" ","Procesos", "Parcial1 Analisis","Primera estrategia", "Segunda estrategia"]
             )
 
             if selected_option == "Procesos":
@@ -330,10 +333,22 @@ def main():
                     # verificar si el dato tiene ' al final por ejemplo "1'"
                     if "'" in i:
                         aux2.append(i[:-1])
-
-
+                
                 if st.button("Calcular probabilidad"):
                     mostrarProbabilidad = True
+            elif selected_option == "Segunda estrategia":
+                c1 = st.multiselect("Seleccione los nodos del conjunto 1", probEP.retornarEstados())
+                c2 = st.multiselect("Seleccione los nodos del conjunto 2", probEP.retornarEstadosFuturos())
+                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(c1, c2))
+                st.session_state.nodes, st.session_state.edges = logGrafo.generar_grafoBipartito(c1, c2, Node, Edge)
+                bandera = True
+                aux3 =[]
+                for i in c2:
+                    # verificar si el dato tiene ' al final por ejemplo "1'"
+                    if "'" in i:
+                        aux3.append(i[:-1])
+                if st.button("Calcular segunda estrategia"):
+                    estrategia2 = True
        
         elif selected == "Ventana":
             selected_option = st.selectbox(
@@ -382,25 +397,36 @@ def main():
             st.header("Posibles SubGrafos:")
             st.write(salida["subgrafos"])   
             st.header("Mas datos")
-            st.session_state.nodes, st.session_state.edges = parcial.mostrarParticiones3(st.session_state.nodes, st.session_state.edges, st)
+            s = parcial.mostrarParticiones3(st.session_state.nodes, st.session_state.edges, st)
+            
         
         if mostrarProbabilidad:
-            aux = probEP.retornarDistribucion(nodosG1, aux2, estadoActual, st)
+            aux = probEP.retornarDistribucion(nodosG1, nodosG2, estadoActual, st)
             # Convierte las listas a cadenas
             nodosG1_str = ', '.join(nodosG1)
-            aux2_str = ', '.join(aux2)
+            aux2_str = ', '.join(nodosG2)
             # Muestra la fórmula de probabilidad condicional con los valores de las variables
             st.latex(r'P(\{' + aux2_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
             st.header("Distribución de probabilidad")
             st.table(aux)
             st.header("Particiones del grafo")
-            df, particiones  = probEP.generarParticiones(aux2, nodosG1, estadoActual)
+            df, particiones  = probEP.generarParticiones(nodosG1, nodosG2, estadoActual)
             st.table(df)
-            st.header("Mejor particion del grafo")
+            st.header("Mejor particion estrategia 1")
+            particion, d, tiempo, lista = probEP.retornarMejorParticion(nodosG1, nodosG2,estadoActual)
+            st.write(str(particion), d, tiempo)
+            #probEP.pintarGrafoGenerado(nodosG1, nodosG2,estadoActual, st.session_state.nodes, st.session_state.edges,st)
             
-            particion = probEP.retornarMejorParticion(aux2, nodosG1,estadoActual, st.session_state.nodes, st.session_state.edges,st)
-            st.write(particion)
+        if estrategia2:
+            st.header("Mejor particion estrategia 2")
+            particionn, diferencia, tiempo, lista = estra2.estrategia2(c1, c2, estadoActual, st.session_state.edges)
+            st.write(str(particionn), diferencia, tiempo)
+            st.header("Particiones del grafo")
+            df, particiones  = estra2.generarParticiones(c1, c2, estadoActual, st.session_state.edges)
+            st.table(df)
             
+           
+
 
            
             

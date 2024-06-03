@@ -1,5 +1,6 @@
 # Description: Clase que se encarga de generar la distribución de probabilidad de un estado futuro dado un estado actual
 from itertools import combinations, product
+import time
 import numpy as np
 from GUI import Gui
 from logica.Data import Data
@@ -7,29 +8,31 @@ from logica.Data import Data
 import pandas as pd
 from scipy.spatial.distance import cdist
 from scipy.stats import wasserstein_distance
-import re
-from logica.LogArista import LogArista
-from logica.LogGrafo import LogGrafo
-from streamlit_agraph import agraph
-
-
+import streamlit_agraph as stag
 
 class ProbabilidadEP:
     def datosMatrices(self):
-        datos = Data().retornarDatosTresNodos()
+        #datos = Data().retornarDatosTresNodos()
+        #datos = Data().retornarDatosCuatroNodos()
+        datos = Data().retornarDatosCincoNodos()
+        #datos = Data().retornarDatosSeisNodos()
         return datos
     
     def generarDistribucionProbabilidades(self, tabla, estadoActual, estadoFuturo, num, estados):
         indice = [estados.index(i) for i in estadoActual]
         probabilidadesDistribuidas = []
         for i in estadoFuturo:
-            nuevaTabla = self.generarTablaComparativa(tabla[i])
+            # verificar si i tiene "'", si es así, se elimina la comilla
+            if "'" in i:
+                i = i[:-1]
+                nuevaTabla = self.generarTablaComparativa(tabla[i])
             filtro2 = self.porcentajeDistribucion(nuevaTabla, indice, num)
             probabilidadesDistribuidas.append(filtro2)
         tabla = self.generarTabla(probabilidadesDistribuidas, num)
-        tabla[0] = [f"{estadoFuturo} | {estadoActual}"] + tabla[0]
+        tabla[0] = [[estadoFuturo, estadoActual]] + tabla[0]
         tabla[1] = [num] + tabla[1]
         return tabla
+
     
     def generarTabla(self, distribucion, num, i=0, numBinario ='', nuevoValor=1):
         if i == len(distribucion):
@@ -105,21 +108,18 @@ class ProbabilidadEP:
         return df
     
     def retornarValorActual(self, c1, c2):
-        datos = self.datosMatrices()
-        lista =[]
-        if len(c1) == 1 :
-            lista.append((0,))
-            lista.append((1,))
-        elif len(c1) == 2 :
-            lista.append((0,0))
-            lista.append((0,1))
-            lista.append((1,0))
-            lista.append((1,1))
-        else:
-            for k, v in datos.items():
-                for k2, v2 in v.items():
-                    lista.append(k2)
-                break
+        lista = []
+        matrices = self.datosMatrices()
+        
+        # Generar todos los números binarios posibles según la longitud de c1
+        #longitud = len(c1)
+        #combinaciones_binarias = list(product([0, 1], repeat=longitud))
+        
+        #lista.extend(combinaciones_binarias)
+        
+        for j in matrices['1']:
+            lista.append(j)
+        
         return lista
     
     def retornarEstadosFuturos(self):
@@ -134,21 +134,9 @@ class ProbabilidadEP:
     def generarParticiones(self, c1, c2, estadoActual):
         matrices = self.datosMatrices()
         particiones = []
-        resultado, estados = self.generarEstadoTransicion(matrices)
-        distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
-        combinaciones = self.generarCombinaciones(distribucionProbabilidadOriginal[0][1], distribucionProbabilidadOriginal[1][0])
-
-        particioness = self.generarProbParticiones(distribucionProbabilidadOriginal, combinaciones)
-        listaDf =[]
-        for i in particioness:
-            aux = self.convertir_a_listas(i)
-            for j in aux:
-                conjunto1 = j[0][1] if j[0][1] else {}
-                conjunto2 = j[1][1] if j[1][1] else {}
-                particiones.append(((conjunto1, '|', j[0][0]), (conjunto2, '|', j[1][0])))
-                #particiones.append((conjunto2, '|', j[1][0]))
-                listaDf.append([(conjunto1, ' | ', j[0][0]), (conjunto2, ' | ', j[1][0])])
-        df = pd.DataFrame(listaDf, columns=['Conjunto 1', 'Conjunto 2']).astype(str)
+        a, b,c, lista = self.retornarMejorParticion(c1, c2, estadoActual)
+        #print(lista)
+        df = pd.DataFrame(lista, columns=['Conjunto 1', 'Conjunto 2','Diferencia', 'Tiempo de ejecución'])
         return df, particiones
     
     def particiones(self, listaDistribuida, eAcual1, eActual2, eFuturo1, eFuturo2):
@@ -221,43 +209,70 @@ class ProbabilidadEP:
             tablaDeparticiones[nombre] = lista
         return tablaDeparticiones
     
-    def retornarMejorParticion(self, c1, c2, estadoActual, nodes, edges,st):
-        tabla = {}
+    def retornarMejorParticion(self, c1, c2, estadoActual):
         matrices = self.datosMatrices()
+        resultado, estados = self.generarEstadoTransicion(matrices)
+        distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
+        lista = []
+        particion, diferencia, tiempo, lista = self.busqueda_voraz(matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual)
+        return particion, diferencia, tiempo, lista
 
-        def helper(c1, c2, estadoActual):
-            # Check if the result is already computed
-            if estadoActual in tabla:
-                return tabla[estadoActual]
-            resultado, estados = self.generarEstadoTransicion(matrices)
-            distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
-            combinaciones = self.generarCombinaciones(distribucionProbabilidadOriginal[0][1], distribucionProbabilidadOriginal[1][0])
+    def busqueda_voraz(self, matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual):
+        mejor_particion = []
+        menor_diferencia = float('inf')
+        listaParticionesEvaluadas = []
+        for i in range(len(c1)):
+            c1_izq = c1[:i]
+            c1_der = c1[i:]
+            c2_izq = []
+            c2_der = list(c2)
 
-            particioness = self.generarProbParticiones(distribucionProbabilidadOriginal, combinaciones)
-            probabilidades = {}
-            for i in particioness:
-                aux = self.convertir_a_listas(i)
-                for j in aux:
-                    distribucion1 = self.generarDistribucionProbabilidades(matrices, j[0][0], j[0][1], estadoActual, estados)
-                    distribucion2 = self.generarDistribucionProbabilidades(matrices, j[1][0], j[1][1], estadoActual, estados)
-                probabilidades[i]= distribucion1 + distribucion2
-            menor = float('inf')
-            mejor_particion = None
-            aux={}
-            for i in probabilidades:
-                p1 = probabilidades[i][1][1:]
-                p2 = probabilidades[i][3][1:]
+            for j in range(len(c2)):
+                c2_izq.append(c2_der.pop(0))
+
+                inicio = time.time()
+                distribucion_izq = self.generarDistribucionProbabilidades(matrices, c1_izq, c2_izq, estadoActual, estados)
+                distribucion_der = self.generarDistribucionProbabilidades(matrices, c1_der, c2_der, estadoActual, estados)
+                print(distribucion_izq)
+                print(distribucion_der)
+                p1 = distribucion_izq[1][1:]
+                p2 = distribucion_der[1][1:]
                 prodTensor = self.producto_tensor(p1, p2)
                 diferencia = self.calcularEMD(distribucionProbabilidadOriginal[1][1:], prodTensor)
-                aux2 = self.convertir_a_listas(i)
-                for j in aux2:
-                    if diferencia < menor and (j[0][0] != c1 and j[0][1]!=c2):
-                        menor = diferencia
-                        mejor_particion = i
-            tabla[estadoActual] = (menor, mejor_particion)
-            return tabla[estadoActual]
+                fin = time.time()
+                tiempoEjecucion = fin - inicio
+                aux = []
+                if c2_der == [] and c1_der == []:
+                    continue
+                elif diferencia < menor_diferencia:
+                    menor_diferencia = diferencia
+                    mejor_particion = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der))]
+                aux = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der)), str(diferencia), str(tiempoEjecucion)]
+                listaParticionesEvaluadas.append(aux)
+        return mejor_particion, menor_diferencia, tiempoEjecucion, listaParticionesEvaluadas
+   
+   
+    def pintarGrafoGenerado(self, c1, c2, estadoActual, nodes, edges, st):
+        mP, _, _, _ = self.retornarMejorParticion(c1, c2, estadoActual)
+        p1, p2 = mP
+        for i in p1:
+            for j in range(len(i)):
+                if i[j] not in p2[0]:
+                    for arista in edges:
+                        if p2[0] and arista.source == i[j] and arista.to in p2[0]:
+                            arista.dashes = True
+                            arista.color = 'rgba(254, 20, 56, 0.5)'
+        for i in p2[1]:
+            if i not in p1[0]:
+                for arista in edges:
+                    if arista.source == i and arista.to in p1[0]:
+                        arista.dashes = True
+                        arista.color = 'rgba(254, 20, 56, 0.5)'
+
+        # Graficamos el grafo con las aristas eliminadas
+        graph = stag.agraph(nodes=nodes, edges=edges, config=Gui(True))
+
         
-        return helper(c1, c2, estadoActual)
     
     def convertir_a_listas(self, datos):
         lineas = datos.split('\n')
