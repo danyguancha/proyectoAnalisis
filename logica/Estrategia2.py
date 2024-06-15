@@ -16,18 +16,36 @@ class Estrategia2:
         menor_diferencia = float('inf')
         listaParticionesEvaluadas = []
         eliminadas = []
+        tiempoEjecucion = 0
+
+        # Calcular la pérdida de información para cada arista
+        perdidas_aristas = {arista: self.calcular_perdida(matrices, estados, distribucionProbabilidadOriginal, c1.copy(), c2.copy(), estadoActual, arista, p) for arista in edges}
 
         # Filtrar las aristas con pérdida != 0
-        edges = [arista for arista in edges if self.calcular_perdida(matrices, estados, distribucionProbabilidadOriginal, c1.copy(), c2.copy(), estadoActual, arista, p) != 0]
+        aristas_con_perdida = [arista for arista, perdida in perdidas_aristas.items() if perdida != 0]
 
-        while edges:
+        # Si no hay aristas con pérdida distinta de cero, generar la partición trivial
+        if not aristas_con_perdida:
+            mejor_particion = [(tuple(c2), ()), ((), tuple(c1))]
             inicio = time.time()
-            edges.sort(key=lambda arista: self.calcular_perdida(matrices, estados, distribucionProbabilidadOriginal, c1.copy(), c2.copy(), estadoActual, arista, p))
-            arista_min_perdida = edges.pop(0)
+            distribucion_izq = p.generarDistribucionProbabilidades(matrices, (), tuple(c2), estadoActual, estados)
+            distribucion_der = p.generarDistribucionProbabilidades(matrices, tuple(c1), (), estadoActual, estados)
+            p1 = distribucion_izq[1][1:]
+            p2 = distribucion_der[1][1:]
+            prodTensor = p.producto_tensor(p1, p2)
+            diferencia = p.calcularEMD(distribucionProbabilidadOriginal[1][1:], prodTensor)
+            fin = time.time()
+            tiempoEjecucion = fin - inicio
+            aux = [(tuple(c2), ()), ((), tuple(c1)), str(diferencia), str(tiempoEjecucion)]
+            listaParticionesEvaluadas.append(aux)
+            return mejor_particion, diferencia, tiempoEjecucion, listaParticionesEvaluadas, eliminadas
 
-            if self.calcular_perdida(matrices, estados, distribucionProbabilidadOriginal, c1.copy(), c2.copy(), estadoActual, arista_min_perdida, p) == 0:
-                eliminadas.append(arista_min_perdida)
-                continue
+        # Ordenar las aristas de menor a mayor pérdida
+        aristas_con_perdida.sort(key=lambda arista: perdidas_aristas[arista])
+
+        while aristas_con_perdida:
+            arista_min_perdida = aristas_con_perdida.pop(0)
+            eliminadas.append(arista_min_perdida)
 
             c1_izq = []
             c1_der = list(c1)
@@ -41,6 +59,7 @@ class Estrategia2:
                 c2_der.remove(arista_min_perdida.to)
                 c2_izq.append(arista_min_perdida.to)
 
+            inicio = time.time()
             distribucion_izq = p.generarDistribucionProbabilidades(matrices, tuple(c1_izq), tuple(c2_izq), estadoActual, estados)
             distribucion_der = p.generarDistribucionProbabilidades(matrices, tuple(c1_der), tuple(c2_der), estadoActual, estados)
             p1 = distribucion_izq[1][1:]
@@ -48,20 +67,18 @@ class Estrategia2:
             prodTensor = p.producto_tensor(p1, p2)
             diferencia = p.calcularEMD(distribucionProbabilidadOriginal[1][1:], prodTensor)
             fin = time.time()
-            tiempoEjecucion = fin - inicio
-            aux = []
+            tiempoEjecucion = fin - inicio  # Asignamos el valor de tiempoEjecucion 
 
-            if c2_der == [] and c1_der == []:
-                continue
-            elif diferencia < menor_diferencia:
+            if diferencia < menor_diferencia:
                 menor_diferencia = diferencia
                 mejor_particion = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der))]
 
             aux = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der)), str(diferencia), str(tiempoEjecucion)]
             listaParticionesEvaluadas.append(aux)
-            eliminadas.append(arista_min_perdida)
 
         return mejor_particion, menor_diferencia, tiempoEjecucion, listaParticionesEvaluadas, eliminadas
+    
+   
 
     def calcular_perdida(self, matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual, arista, p):
         c1_copy = c1.copy()
@@ -130,5 +147,5 @@ class Estrategia2:
                         arista.color = 'rgba(254, 20, 56, 0.5)'
 
         # Generar y mostrar el grafo
-        graph = stag.agraph(nodes=nodes, edges=edges, config=Gui(False))
+        graph = stag.agraph(nodes=nodes, edges=edges, config=Gui(True))
 
