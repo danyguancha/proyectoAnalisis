@@ -14,6 +14,7 @@ from logica.LogGrafo import LogGrafo
 from logica.Parcial1 import Parcial1
 from logica.ProbabilidadEP import ProbabilidadEP
 from logica.Estrategia2 import Estrategia2
+from logica.Estrategia3 import Estrategia3
 import random
 
 st.set_page_config(
@@ -86,12 +87,14 @@ def main():
     parcial = Parcial1()
     probEP = ProbabilidadEP()
     estra2 = Estrategia2()
+    estra3 = Estrategia3()
 
     bandera = False
     conexoOdisconexo = False
     boolParcial = False
     mostrarProbabilidad = False
     estrategia2 = False
+    estrategia3 = False
     salida = {}
     with st.sidebar:
         st.session_state.directed = None
@@ -284,7 +287,7 @@ def main():
         if selected == "Ejecutar":
             selected_option = option_menu(
                 menu_title=None,
-                options=[" ","Procesos", "Parcial1 Analisis","Primera estrategia", "Segunda estrategia"]
+                options=[" ","Procesos", "Parcial1 Analisis","Primera estrategia", "Segunda estrategia", "Tercera estrategia"]
             )
 
             if selected_option == "Procesos":
@@ -349,6 +352,19 @@ def main():
                         aux3.append(i[:-1])
                 if st.button("Calcular segunda estrategia"):
                     estrategia2 = True
+            elif selected_option == "Tercera estrategia":
+                c11 = st.multiselect("Seleccione los nodos del conjunto 1", probEP.retornarEstados())
+                c22 = st.multiselect("Seleccione los nodos del conjunto 2", probEP.retornarEstadosFuturos())
+                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(c11, c22))
+                st.session_state.nodes, st.session_state.edges = logGrafo.generar_grafoBipartito(c11, c22, Node, Edge)
+                bandera = True
+                aux4 =[]
+                for i in c22:
+                    # verificar si el dato tiene ' al final por ejemplo "1'"
+                    if "'" in i:
+                        aux4.append(i[:-1])
+                if st.button("Calcular tercera estrategia"):
+                    estrategia3 = True
        
         elif selected == "Ventana":
             selected_option = st.selectbox(
@@ -409,21 +425,26 @@ def main():
             st.latex(r'P(\{' + aux2_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
             st.header("Distribución de probabilidad")
             st.table(aux)
-            st.header("Particiones del grafo")
-            df, particiones  = probEP.generarParticiones(nodosG1, nodosG2, estadoActual)
-            st.table(df)
+            #st.header("Particiones del grafo")
+            #df, particiones  = probEP.generarParticiones(nodosG1, nodosG2, estadoActual)
+            #st.table(df)
             st.header("Mejor particion estrategia 1")
             particion, d, tiempo, lista = probEP.retornarMejorParticion(nodosG1, nodosG2,estadoActual)
             st.write(str(particion), d, tiempo)
-            #probEP.pintarGrafoGenerado(nodosG1, nodosG2,estadoActual, st.session_state.nodes, st.session_state.edges,st)
+            probEP.pintarGrafoGenerado(nodosG1, nodosG2,estadoActual, st.session_state.nodes, st.session_state.edges,st)
             
         if estrategia2:
             st.header("Mejor particion estrategia 2")
-            particionn, diferencia, tiempo, lista = estra2.estrategia2(c1, c2, estadoActual, st.session_state.edges)
+            particionn, diferencia, tiempo, lista,l = estra2.estrategia2(c1, c2, estadoActual, st.session_state.edges)
             st.write(str(particionn), diferencia, tiempo)
             st.header("Particiones del grafo")
             df, particiones  = estra2.generarParticiones(c1, c2, estadoActual, st.session_state.edges)
+            estra2.pintarGrafoGenerado(c1, c2,estadoActual, st.session_state.nodes, st.session_state.edges,Node, Edge)
             #st.table(df)
+        if estrategia3:
+            st.header("Mejor particion estrategia 3")
+            estra3.pintarGrafoGenerado(c11, c22,estadoActual, st.session_state.nodes, st.session_state.edges,st)
+           
             
            
 
