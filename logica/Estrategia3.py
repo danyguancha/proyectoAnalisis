@@ -94,32 +94,35 @@ class Estrategia3:
         return particion, diferencia, tiempo, lista
 
     def recocidoSimulado(self, matrices, estados, disProbdOriginal, c1, c2, estadoActual):
-        mejor_particion = []
+        mejor_particion = None
         menor_diferencia = float('inf')
         listaParticionesEvaluadas = []
         temperatura = 1000
         factor_enfriamiento = 0.99
         iteraciones_por_temperatura = 2
+        tiempo = 0
         
         while temperatura > 1:
             for _ in range(iteraciones_por_temperatura):
+                inicio = time.time()
                 c1_izq, c2_izq, c1_der, c2_der = self.generar_vecino(c1, c2)
                 diferencia = self.obtener_diferencia(c1_izq, c2_izq, c1_der, c2_der, matrices, estadoActual, disProbdOriginal, estados)
-                aux = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der)), str(diferencia), str(time.time())]
+                aux = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der)), str(diferencia), str(time.time())]
                 listaParticionesEvaluadas.append(aux)
                 
                 if diferencia < menor_diferencia:
                     menor_diferencia = diferencia
-                    mejor_particion = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der))]
+                    mejor_particion = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der))]
                 else:
                     probabilidad_aceptacion = math.exp((menor_diferencia - diferencia) / temperatura)
                     if random.random() < probabilidad_aceptacion:
                         menor_diferencia = diferencia
-                        mejor_particion = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der))]
-            
+                        mejor_particion = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der))]
+                fin = time.time()
+                tiempo = fin - inicio
             temperatura *= factor_enfriamiento
 
-        return mejor_particion, menor_diferencia, temperatura, listaParticionesEvaluadas
+        return mejor_particion, menor_diferencia, tiempo, listaParticionesEvaluadas
 
     def obtener_diferencia(self, c1_izq, c2_izq, c1_der, c2_der, matrices, estadoActual,disOriginal, estados):
         distribucion_izq = self.generarDistribucionProbabilidades(matrices, c1_izq, c2_izq, estadoActual, estados)
@@ -131,9 +134,11 @@ class Estrategia3:
         return diferencia
 
     def generar_vecino(self, c1, c2):
-        c1_izq = random.sample(c1, len(c1)//2)
+        mitad_c1 = len(c1) // 2
+        mitad_c2 = len(c2) // 2
+        c1_izq = random.sample(c1, mitad_c1)
         c1_der = list(set(c1) - set(c1_izq))
-        c2_izq = random.sample(c2, len(c2)//2)
+        c2_izq = random.sample(c2, mitad_c2)
         c2_der = list(set(c2) - set(c2_izq))
         return c1_izq, c2_izq, c1_der, c2_der
    

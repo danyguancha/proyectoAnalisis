@@ -1,4 +1,5 @@
 # Description: Clase que se encarga de generar la distribución de probabilidad de un estado futuro dado un estado actual
+import functools
 from itertools import combinations, product
 import time
 import numpy as np
@@ -213,14 +214,23 @@ class ProbabilidadEP:
         matrices = self.datosMatrices()
         resultado, estados = self.generarEstadoTransicion(matrices)
         distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
+        print(distribucionProbabilidadOriginal)
         lista = []
         particion, diferencia, tiempo, lista = self.busqueda_voraz(matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual)
         return particion, diferencia, tiempo, lista
+    
+    def estrategiaUno(self, matrices, c1, c2, estadoActual, estados):
+        tabla = {}
+        key = (tuple(c1), tuple(c2), estadoActual)  # Creamos una llave única para la tabla
+        if key not in tabla:
+            tabla[key] = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
+        return tabla[key]
 
     def busqueda_voraz(self, matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual):
         mejor_particion = []
         menor_diferencia = float('inf')
         listaParticionesEvaluadas = []
+
         for i in range(len(c1)):
             c1_izq = c1[:i]
             c1_der = c1[i:]
@@ -228,11 +238,10 @@ class ProbabilidadEP:
             c2_der = list(c2)
 
             for j in range(len(c2)):
-                c2_izq.append(c2_der.pop(0))
 
                 inicio = time.time()
-                distribucion_izq = self.generarDistribucionProbabilidades(matrices, c1_izq, c2_izq, estadoActual, estados)
-                distribucion_der = self.generarDistribucionProbabilidades(matrices, c1_der, c2_der, estadoActual, estados)
+                distribucion_izq = self.estrategiaUno(matrices, c1_izq, c2_izq, estadoActual, estados)
+                distribucion_der = self.estrategiaUno(matrices, c1_der, c2_der, estadoActual, estados)
                 p1 = distribucion_izq[1][1:]
                 p2 = distribucion_der[1][1:]
                 prodTensor = self.producto_tensor(p1, p2)
@@ -247,6 +256,7 @@ class ProbabilidadEP:
                     mejor_particion = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der))]
                 aux = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der)), str(diferencia), str(tiempoEjecucion)]
                 listaParticionesEvaluadas.append(aux)
+
         return mejor_particion, menor_diferencia, tiempoEjecucion, listaParticionesEvaluadas
    
    
