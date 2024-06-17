@@ -15,8 +15,10 @@ class ProbabilidadEP:
     def datosMatrices(self):
         #datos = Data().retornarDatosTresNodos()
         #datos = Data().retornarDatosCuatroNodos()
-        datos = Data().retornarDatosCincoNodos()
+        #datos = Data().retornarDatosCincoNodos()
         #datos = Data().retornarDatosSeisNodos()
+        datos = Data().retornarDatosOchoNodos()  
+        #datos = Data().retornarDatosCuatro()      
         return datos
     
     def generarDistribucionProbabilidades(self, tabla, estadoActual, estadoFuturo, num, estados):

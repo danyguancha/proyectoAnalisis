@@ -381,10 +381,13 @@ def main():
         elif selected == "Ayuda":
             selected_option = st.selectbox(
                 "Seleccionar opción:",
-                ["Ayuda", "Acerca de Grafos"]
+                ["Manual de usuario", "Documentación", "Acerca de Grafos"]
             )
-            if selected_option == "Ayuda":
+            if selected_option == "Manual de usuario":
                 ruta = './Data/Manual de Usuario - Proyecto ADA.pdf'
+                logGrafo.descargarManualUsuario(ruta, st)
+            elif selected_option == "Documentación":
+                ruta = './Data/Documentación_Proyecto_Final.pdf'
                 logGrafo.descargarManualUsuario(ruta, st)
             elif selected_option == "Acerca de Grafos":
                 ruta = './Data/grafos.pdf'
