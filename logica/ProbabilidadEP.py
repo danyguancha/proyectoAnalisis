@@ -214,7 +214,6 @@ class ProbabilidadEP:
         matrices = self.datosMatrices()
         resultado, estados = self.generarEstadoTransicion(matrices)
         distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
-        print(distribucionProbabilidadOriginal)
         lista = []
         particion, diferencia, tiempo, lista = self.busqueda_voraz(matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual)
         return particion, diferencia, tiempo, lista
@@ -238,6 +237,7 @@ class ProbabilidadEP:
             c2_der = list(c2)
 
             for j in range(len(c2)):
+                c2_izq.append(c2_der.pop(0))
 
                 inicio = time.time()
                 distribucion_izq = self.estrategiaUno(matrices, c1_izq, c2_izq, estadoActual, estados)

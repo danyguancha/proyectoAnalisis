@@ -427,7 +427,7 @@ def main():
             st.table(aux)
             #st.header("Particiones del grafo")
             df, particiones  = probEP.generarParticiones(nodosG1, nodosG2, estadoActual)
-            st.table(df)
+            #st.table(df)
             st.header("Mejor particion estrategia 1")
             particion, d, tiempo, lista = probEP.retornarMejorParticion(nodosG1, nodosG2,estadoActual)
             st.write(str(particion), d, tiempo)
