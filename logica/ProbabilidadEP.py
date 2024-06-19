@@ -10,19 +10,29 @@ import pandas as pd
 from scipy.spatial.distance import cdist
 from scipy.stats import wasserstein_distance
 import streamlit_agraph as stag
+from logica.sustentacion import Sustentacion
+from logica.LogGrafo import LogGrafo
 
 class ProbabilidadEP:
     def datosMatrices(self):
         #datos = Data().retornarDatosTresNodos()
-        #datos = Data().retornarDatosCuatroNodos()
+        datos = Data().retornarDatosCuatroNodos()
         #datos = Data().retornarDatosCincoNodos()
         #datos = Data().retornarDatosSeisNodos()
-        datos = Data().retornarDatosOchoNodos()  
+        #datos = Data().retornarDatosMatrizPrueba()  
         #datos = Data().retornarDatosCuatro()      
         return datos
     
     def generarDistribucionProbabilidades(self, tabla, estadoActual, estadoFuturo, num, estados):
-        indice = [estados.index(i) for i in estadoActual]
+        #indice = [estados.index(i) for i in estadoActual]
+        try:
+            indice = [estados.index(i) for i in estadoActual]
+        except ValueError as e:
+            print(f"Error: {e}")
+            print("estadoActual:", estadoActual)
+            print("estados:", estados)
+            raise
+
         probabilidadesDistribuidas = []
         for i in estadoFuturo:
             # verificar si i tiene "'", si es así, se elimina la comilla
@@ -36,7 +46,6 @@ class ProbabilidadEP:
         tabla[1] = [num] + tabla[1]
         return tabla
 
-    
     def generarTabla(self, distribucion, num, i=0, numBinario ='', nuevoValor=1):
         if i == len(distribucion):
             numBinario = '0' * (len(distribucion)-len(numBinario)) + numBinario
@@ -91,15 +100,15 @@ class ProbabilidadEP:
         aux(0)
         return transiciones, estados 
     
-    def retornarEstados(self):
-        datos = self.datosMatrices()
+    def retornarEstados(self, datos):
+        
         resultado, estados = self.generarEstadoTransicion(datos)
         return estados
     
-    def retornarDistribucion(self, eActual, eFuturo, valorActual, st):
+    def retornarDistribucion(self, c1, c2, valorActual):
         matrices = self.datosMatrices()
         resultado, estados = self.generarEstadoTransicion(matrices)
-        datos = self.generarDistribucionProbabilidades(matrices, eActual, eFuturo, valorActual, estados)
+        datos = self.generarDistribucionProbabilidades(matrices, c1, c2, valorActual, estados)
         lista = []
         lista.append(str(datos[0][0]))
             
@@ -109,6 +118,7 @@ class ProbabilidadEP:
         
         df = pd.DataFrame(datos[1:], columns=lista)
         return df
+    
     
     def retornarValorActual(self, c1, c2):
         lista = []
@@ -120,26 +130,32 @@ class ProbabilidadEP:
         
         #lista.extend(combinaciones_binarias)
         
-        for j in matrices['1']:
+        for j in matrices['A']:
             lista.append(j)
         
         return lista
     
-    def retornarEstadosFuturos(self):
-        datos = self.datosMatrices()
+    def retornarEstadosFuturos(self, datos):
+        
         resultado, estados = self.generarEstadoTransicion(datos)
         # agregarle a cada valor de los estados una '
         for i in range(len(estados)):
             estados[i] = estados[i] + "'"
 
         return estados
-            
-    def generarParticiones(self, c1, c2, estadoActual):
+
+    def retornarC1C2(self, c1, estadoActual, candidato):
+        matrices = self.datosMatrices()
+        matricesP = self.retornarMatrizCondicionada(matrices, c1, estadoActual, candidato)
+        c1 = self.retornarEstados(matricesP)
+        c2 = self.retornarEstadosFuturos(matricesP)
+        return c1, c2
+    def generarParticiones(self, c1, c2, estadoActual, candidato):
         matrices = self.datosMatrices()
         particiones = []
-        a, b,c, lista = self.retornarMejorParticion(c1, c2, estadoActual)
+        a, b,c, lista = self.retornarMejorParticion(c1, c2, estadoActual, candidato)
         #print(lista)
-        df = pd.DataFrame(lista, columns=['Conjunto 1', 'Conjunto 2','Diferencia', 'Tiempo de ejecución'])
+        df = pd.DataFrame(lista, columns=['Conjunto 1', 'Conjunto 2','Diferencia'])
         return df, particiones
     
     def particiones(self, listaDistribuida, eAcual1, eActual2, eFuturo1, eFuturo2):
@@ -212,13 +228,34 @@ class ProbabilidadEP:
             tablaDeparticiones[nombre] = lista
         return tablaDeparticiones
     
-    def retornarMejorParticion(self, c1, c2, estadoActual):
+    def retornarMejorParticion(self, c1, c2, estadoActual, candidato):
+        matrices = self.datosMatrices()
+        matricesP = self.retornarMatrizCondicionada(matrices, c1, estadoActual, candidato)
+        c1 = self.retornarEstados(matricesP)
+        c2 = self.retornarEstadosFuturos(matricesP)
+        resultado, estados = self.generarEstadoTransicion(matricesP)
+        distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matricesP, c1, c2, estadoActual, estados)
+        lista = []
+        particion, diferencia, tiempo, lista = self.busqueda_voraz(matricesP, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual)
+        return particion, diferencia, tiempo, lista
+
+    def retornarMejorParticionE1(self, c1, c2, estadoActual):
         matrices = self.datosMatrices()
         resultado, estados = self.generarEstadoTransicion(matrices)
         distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
         lista = []
+        inicio = time.time()
         particion, diferencia, tiempo, lista = self.busqueda_voraz(matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual)
-        return particion, diferencia, tiempo, lista
+        fin = time.time()
+        tiempoEjecucion = fin - inicio
+        return particion, diferencia, tiempoEjecucion, lista
+  
+    
+    def retornarMatrizCondicionada(self, matrices, c1, estadoActual, candidato):
+        s = Sustentacion()
+        matrices_condicionadas = s.condiciona_matriz(matrices, estadoActual, candidato,c1)
+        probabilidades_finales = s.calcula_probabilidades(matrices_condicionadas, estadoActual, candidato,c1)
+        return probabilidades_finales
     
     def estrategiaUno(self, matrices, c1, c2, estadoActual, estados):
         tabla = {}
@@ -231,39 +268,38 @@ class ProbabilidadEP:
         mejor_particion = []
         menor_diferencia = float('inf')
         listaParticionesEvaluadas = []
-
+        
         for i in range(len(c1)):
+            
             c1_izq = c1[:i]
             c1_der = c1[i:]
             c2_izq = []
             c2_der = list(c2)
-
+            
             for j in range(len(c2)):
                 c2_izq.append(c2_der.pop(0))
 
-                inicio = time.time()
+                
                 distribucion_izq = self.estrategiaUno(matrices, c1_izq, c2_izq, estadoActual, estados)
                 distribucion_der = self.estrategiaUno(matrices, c1_der, c2_der, estadoActual, estados)
                 p1 = distribucion_izq[1][1:]
                 p2 = distribucion_der[1][1:]
                 prodTensor = self.producto_tensor(p1, p2)
                 diferencia = self.calcularEMD(distribucionProbabilidadOriginal[1][1:], prodTensor)
-                fin = time.time()
-                tiempoEjecucion = fin - inicio
+                
                 aux = []
                 if c2_der == [] and c1_der == []:
                     continue
                 elif diferencia < menor_diferencia:
                     menor_diferencia = diferencia
                     mejor_particion = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der))]
-                aux = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der)), str(diferencia), str(tiempoEjecucion)]
+                aux = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der)), str(diferencia)]
                 listaParticionesEvaluadas.append(aux)
-
-        return mejor_particion, menor_diferencia, tiempoEjecucion, listaParticionesEvaluadas
+        
+        return mejor_particion, menor_diferencia,0, listaParticionesEvaluadas
    
-   
-    def pintarGrafoGenerado(self, c1, c2, estadoActual, nodes, edges, st):
-        mP, a, b, c = self.retornarMejorParticion(c1, c2, estadoActual)
+    def pintarGrafoGeneradoE1(self, c1, c2, estadoActual, nodes, edges):
+        mP, a, b, c = self.retornarMejorParticionE1(c1, c2, estadoActual)
         p1, p2 = mP
         for i in p1[1]:
             if i not in p2[1]:
@@ -277,11 +313,35 @@ class ProbabilidadEP:
                     if  arista.source == i and arista.to in p1[0]:
                         arista.dashes = True
                         arista.color = 'rgba(254, 20, 56, 0.5)'
-
+        
         # Graficamos el grafo con las aristas eliminadas
         graph = stag.agraph(nodes=nodes, edges=edges, config=Gui(True))
 
+    def pintarGrafoGenerado(self, c1, c2, estadoActual, edges, candidato, Node, Edge):
         
+        mP, a, b, c = self.retornarMejorParticion(c1, c2, estadoActual, candidato)
+        matrices = self.datosMatrices()
+        matricesP = self.retornarMatrizCondicionada(matrices, c1, estadoActual, candidato)
+        c1 = self.retornarEstados(matricesP)
+        c2 = self.retornarEstadosFuturos(matricesP)
+        nodes, edges = LogGrafo().generar_grafoBipartito(c1, c2, Node, Edge)
+        p1, p2 = mP
+        for i in p1[1]:
+            if i not in p2[1]:
+                for arista in edges:
+                    if  arista.source == i and arista.to in p2[0]:
+                        arista.dashes = True
+                        arista.color = 'rgba(254, 20, 56, 0.5)'
+        for i in p2[1]:
+            if i not in p1[1]:
+                for arista in edges:
+                    if  arista.source == i and arista.to in p1[0]:
+                        arista.dashes = True
+                        arista.color = 'rgba(254, 20, 56, 0.5)'
+        
+        # Graficamos el grafo con las aristas eliminadas
+        graph = stag.agraph(nodes=nodes, edges=edges, config=Gui(True))     
+
     
     def convertir_a_listas(self, datos):
         lineas = datos.split('\n')
@@ -297,7 +357,6 @@ class ProbabilidadEP:
             listas.append(grupos_listas)
         return listas
 
-    
     def calcularEMD(self, p1, p2):
         p1 = np.array(p1)
         p2 = np.array(p2)
@@ -313,7 +372,6 @@ class ProbabilidadEP:
         cost_matrix = np.abs(np.subtract.outer(p1, p2))
         salida = np.sum(np.min(cost_matrix, axis=1) * p1)
         return salida
-    
             
     def producto_tensor(self, p1, p2):
         p1 = np.array(p1)

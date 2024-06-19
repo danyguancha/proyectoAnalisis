@@ -17,7 +17,7 @@ class Estrategia2:
         listaParticionesEvaluadas = []
         eliminadas = []
         tiempoEjecucion = 0
-
+        
         # Calcular la pérdida de información para cada arista
         perdidas_aristas = {arista: self.calcular_perdida(matrices, estados, distribucionProbabilidadOriginal, c1.copy(), c2.copy(), estadoActual, arista, p) for arista in edges}
 
@@ -27,19 +27,18 @@ class Estrategia2:
         # Si no hay aristas con pérdida distinta de cero, generar la partición trivial
         if not aristas_con_perdida:
             mejor_particion = [(tuple(c2), ()), ((), tuple(c1))]
-            inicio = time.time()
+            
             distribucion_izq = p.generarDistribucionProbabilidades(matrices, (), tuple(c2), estadoActual, estados)
             distribucion_der = p.generarDistribucionProbabilidades(matrices, tuple(c1), (), estadoActual, estados)
             p1 = distribucion_izq[1][1:]
             p2 = distribucion_der[1][1:]
             prodTensor = p.producto_tensor(p1, p2)
             diferencia = p.calcularEMD(distribucionProbabilidadOriginal[1][1:], prodTensor)
-            fin = time.time()
-            tiempoEjecucion = fin - inicio
-            aux = [(tuple(c2), ()), ((), tuple(c1)), str(diferencia), str(tiempoEjecucion)]
+            
+            aux = [(tuple(c2), ()), ((), tuple(c1)), str(diferencia)]
             listaParticionesEvaluadas.append(aux)
             return mejor_particion, diferencia, tiempoEjecucion, listaParticionesEvaluadas, eliminadas
-
+        inicio = time.time()
         # Ordenar las aristas de menor a mayor pérdida
         aristas_con_perdida.sort(key=lambda arista: perdidas_aristas[arista])
 
@@ -58,24 +57,21 @@ class Estrategia2:
             if arista_min_perdida.to in c2_der:
                 c2_der.remove(arista_min_perdida.to)
                 c2_izq.append(arista_min_perdida.to)
-
-            inicio = time.time()
             distribucion_izq = p.generarDistribucionProbabilidades(matrices, tuple(c1_izq), tuple(c2_izq), estadoActual, estados)
             distribucion_der = p.generarDistribucionProbabilidades(matrices, tuple(c1_der), tuple(c2_der), estadoActual, estados)
             p1 = distribucion_izq[1][1:]
             p2 = distribucion_der[1][1:]
             prodTensor = p.producto_tensor(p1, p2)
             diferencia = p.calcularEMD(distribucionProbabilidadOriginal[1][1:], prodTensor)
-            fin = time.time()
-            tiempoEjecucion = fin - inicio  # Asignamos el valor de tiempoEjecucion 
 
             if diferencia < menor_diferencia:
                 menor_diferencia = diferencia
                 mejor_particion = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der))]
 
-            aux = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der)), str(diferencia), str(tiempoEjecucion)]
+            aux = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der)), str(diferencia)]
             listaParticionesEvaluadas.append(aux)
-
+        fin = time.time()
+        tiempoEjecucion = fin - inicio 
         return mejor_particion, menor_diferencia, tiempoEjecucion, listaParticionesEvaluadas, eliminadas
     
    
@@ -99,10 +95,9 @@ class Estrategia2:
         return diferencia
     
     def generarParticiones(self, c1, c2, estadoActual, edges):
-        particiones = []
         a, b, c, lista, l = self.estrategia2(c1, c2, estadoActual, edges)
-        df = pd.DataFrame(lista, columns=['Conjunto 1', 'Conjunto 2', 'Diferencia', 'Tiempo de ejecución'])
-        return df, particiones
+        df = pd.DataFrame(lista, columns=['Conjunto 1', 'Conjunto 2', 'Diferencia'])
+        return df
     
     def pintarGrafoGenerado(self, c1, c2, estadoActual, nodes, edges, Node, Edge):
         p = ProbabilidadEP()

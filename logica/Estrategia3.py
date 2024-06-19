@@ -90,7 +90,10 @@ class Estrategia3:
         resultado, estados = self.generarEstadoTransicion(matrices)
         distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
         lista = []
-        particion, diferencia, tiempo, lista = self.recocidoSimulado(matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual)
+        inicio = time.time()
+        particion, diferencia, tiempoo, lista = self.recocidoSimulado(matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual)
+        fin = time.time()
+        tiempo = fin - inicio
         return particion, diferencia, tiempo, lista
 
     def recocidoSimulado(self, matrices, estados, disProbdOriginal, c1, c2, estadoActual):
@@ -98,13 +101,13 @@ class Estrategia3:
         menor_diferencia = float('inf')
         listaParticionesEvaluadas = []
         temperatura = 1000
-        factor_enfriamiento = 0.99
+        factor_enfriamiento = 0.85
         iteraciones_por_temperatura = 2
         tiempo = 0
         
         while temperatura > 1:
+            
             for _ in range(iteraciones_por_temperatura):
-                inicio = time.time()
                 c1_izq, c2_izq, c1_der, c2_der = self.generar_vecino(c1, c2)
                 diferencia = self.obtener_diferencia(c1_izq, c2_izq, c1_der, c2_der, matrices, estadoActual, disProbdOriginal, estados)
                 aux = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der)), str(diferencia), str(time.time())]
@@ -118,11 +121,11 @@ class Estrategia3:
                     if random.random() < probabilidad_aceptacion:
                         menor_diferencia = diferencia
                         mejor_particion = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der))]
-                fin = time.time()
-                tiempo = fin - inicio
+                
             temperatura *= factor_enfriamiento
+        
 
-        return mejor_particion, menor_diferencia, tiempo, listaParticionesEvaluadas
+        return mejor_particion, menor_diferencia, 0, listaParticionesEvaluadas
 
     def obtener_diferencia(self, c1_izq, c2_izq, c1_der, c2_der, matrices, estadoActual,disOriginal, estados):
         distribucion_izq = self.generarDistribucionProbabilidades(matrices, c1_izq, c2_izq, estadoActual, estados)
@@ -157,8 +160,11 @@ class Estrategia3:
                     if  arista.source == i and arista.to in p1[0]:
                         arista.dashes = True
                         arista.color = 'rgba(254, 20, 56, 0.5)'
-        st.write(str(particion), diferencia, tiempo)
-        graph = stag.agraph(nodes=nodes, edges=edges, config=Gui(True))
+        
+        st.write('Partición: ',str(particion))
+        st.write('Perdida: ', diferencia)
+        st.write('Tiempo: ', tiempo)
+        #graph = stag.agraph(nodes=nodes, edges=edges, config=Gui(True))
 
     def calcularEMD(self, p1, p2):
         p1 = np.array(p1)
