@@ -14,14 +14,42 @@ from logica.sustentacion import Sustentacion
 from logica.LogGrafo import LogGrafo
 
 class ProbabilidadEP:
-    def datosMatrices(self):
-        #datos = Data().retornarDatosTresNodos()
-        datos = Data().retornarDatosCuatroNodos()
-        #datos = Data().retornarDatosCincoNodos()
-        #datos = Data().retornarDatosSeisNodos()
+    def datosMatrices(self, opcion):
+        tres = Data().retornarDatosTresNodos()
+        cuatro = Data().retornarDatosCuatroNodos()
+        cinco = Data().retornarDatosCincoNodos()
+        seis = Data().retornarDatosSeisNodos()
+        ocho = Data().retornarDatosMatrizOchoNodos()
+        diez = Data().retornarDatosMatrizDiezNodos()
+        salida = None
+        if opcion == "Tres Nodos":
+            salida = tres
+        if opcion == "Cuatro Nodos":
+            salida = cuatro
+        if opcion == "Cinco Nodos":
+            salida =  cinco
+        if opcion == "Seis Nodos":
+            salida = seis  
+        if opcion == "Ocho Nodos":
+            salida = ocho
+        if opcion == "Diez Nodos":
+            salida = diez
+        return salida
+    def listaMatrices(self):
+        opcion = ["Tres Nodos", "Cuatro Nodos", "Cinco Nodos", "Seis Nodos", "Ocho Nodos", "Diez Nodos"]          
+        return opcion
+      
+    def mostrarMatriz(self, st):
+        tres = Data().retornarDatosTresNodos()
+        cuatro = Data().retornarDatosCuatroNodos()
+        cinco = Data().retornarDatosCincoNodos()
+        seis = Data().retornarDatosSeisNodos()
         #datos = Data().retornarDatosMatrizPrueba()  
-        #datos = Data().retornarDatosCuatro()      
-        return datos
+        #datos = Data().retornarDatosCuatro() 
+        opcion = st.radio("",["Tres Nodos", "Cuatro Nodos"], key="matriz")
+        if opcion == "Tres Nodos":
+            return tres
+
     
     def generarDistribucionProbabilidades(self, tabla, estadoActual, estadoFuturo, num, estados):
         #indice = [estados.index(i) for i in estadoActual]
@@ -105,8 +133,8 @@ class ProbabilidadEP:
         resultado, estados = self.generarEstadoTransicion(datos)
         return estados
     
-    def retornarDistribucion(self, c1, c2, valorActual):
-        matrices = self.datosMatrices()
+    def retornarDistribucion(self, c1, c2, valorActual, opcion):
+        matrices = self.datosMatrices(opcion)
         resultado, estados = self.generarEstadoTransicion(matrices)
         datos = self.generarDistribucionProbabilidades(matrices, c1, c2, valorActual, estados)
         lista = []
@@ -119,16 +147,27 @@ class ProbabilidadEP:
         df = pd.DataFrame(datos[1:], columns=lista)
         return df
     
-    
-    def retornarValorActual(self, c1, c2):
+    def retornarDistribucionSustentacion(self, c1, c2, valorActual, candidato, opcion):
+        matrices = self.datosMatrices(opcion)
+        matricesP = self.retornarMatrizCondicionada(matrices, c1, valorActual, candidato)
+        c1 = self.retornarEstados(matricesP)
+        c2 = self.retornarEstadosFuturos(matricesP)
+        resultado, estados = self.generarEstadoTransicion(matricesP)
+        datos = self.generarDistribucionProbabilidades(matricesP, c1, c2, valorActual, estados)
         lista = []
-        matrices = self.datosMatrices()
+        lista.append(str(datos[0][0]))
+            
+        #lista.append(datos[0])
+        for i in range(len(datos[0][1:])):
+            lista.append(str(datos[0][1:][i]))
         
-        # Generar todos los números binarios posibles según la longitud de c1
-        #longitud = len(c1)
-        #combinaciones_binarias = list(product([0, 1], repeat=longitud))
-        
-        #lista.extend(combinaciones_binarias)
+        df = pd.DataFrame(datos[1:], columns=lista)
+        return df
+    
+    
+    def retornarValorActual(self, c1, c2, opcion):
+        lista = []
+        matrices = self.datosMatrices(opcion)
         
         for j in matrices['A']:
             lista.append(j)
@@ -144,14 +183,9 @@ class ProbabilidadEP:
 
         return estados
 
-    def retornarC1C2(self, c1, estadoActual, candidato):
-        matrices = self.datosMatrices()
-        matricesP = self.retornarMatrizCondicionada(matrices, c1, estadoActual, candidato)
-        c1 = self.retornarEstados(matricesP)
-        c2 = self.retornarEstadosFuturos(matricesP)
-        return c1, c2
-    def generarParticiones(self, c1, c2, estadoActual, candidato):
-        matrices = self.datosMatrices()
+    
+    def generarParticiones(self, c1, c2, estadoActual, candidato, opcion):
+        matrices = self.datosMatrices(opcion)
         particiones = []
         a, b,c, lista = self.retornarMejorParticion(c1, c2, estadoActual, candidato)
         #print(lista)
@@ -228,8 +262,8 @@ class ProbabilidadEP:
             tablaDeparticiones[nombre] = lista
         return tablaDeparticiones
     
-    def retornarMejorParticion(self, c1, c2, estadoActual, candidato):
-        matrices = self.datosMatrices()
+    def retornarMejorParticion(self, c1, c2, estadoActual, candidato, opcion):
+        matrices = self.datosMatrices(opcion)
         matricesP = self.retornarMatrizCondicionada(matrices, c1, estadoActual, candidato)
         c1 = self.retornarEstados(matricesP)
         c2 = self.retornarEstadosFuturos(matricesP)
@@ -239,8 +273,8 @@ class ProbabilidadEP:
         particion, diferencia, tiempo, lista = self.busqueda_voraz(matricesP, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual)
         return particion, diferencia, tiempo, lista
 
-    def retornarMejorParticionE1(self, c1, c2, estadoActual):
-        matrices = self.datosMatrices()
+    def retornarMejorParticionE1(self, c1, c2, estadoActual, opcion):
+        matrices = self.datosMatrices(opcion)
         resultado, estados = self.generarEstadoTransicion(matrices)
         distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
         lista = []
@@ -298,8 +332,8 @@ class ProbabilidadEP:
         
         return mejor_particion, menor_diferencia,0, listaParticionesEvaluadas
    
-    def pintarGrafoGeneradoE1(self, c1, c2, estadoActual, nodes, edges):
-        mP, a, b, c = self.retornarMejorParticionE1(c1, c2, estadoActual)
+    def pintarGrafoGeneradoE1(self, c1, c2, estadoActual, nodes, edges, opcion):
+        mP, a, b, c = self.retornarMejorParticionE1(c1, c2, estadoActual, opcion)
         p1, p2 = mP
         for i in p1[1]:
             if i not in p2[1]:
@@ -317,10 +351,10 @@ class ProbabilidadEP:
         # Graficamos el grafo con las aristas eliminadas
         graph = stag.agraph(nodes=nodes, edges=edges, config=Gui(True))
 
-    def pintarGrafoGenerado(self, c1, c2, estadoActual, edges, candidato, Node, Edge):
+    def pintarGrafoGenerado(self, c1, c2, estadoActual, edges, candidato, Node, Edge, opcion):
         
-        mP, a, b, c = self.retornarMejorParticion(c1, c2, estadoActual, candidato)
-        matrices = self.datosMatrices()
+        mP, a, b, c = self.retornarMejorParticion(c1, c2, estadoActual, candidato, opcion)
+        matrices = self.datosMatrices(opcion)
         matricesP = self.retornarMatrizCondicionada(matrices, c1, estadoActual, candidato)
         c1 = self.retornarEstados(matricesP)
         c2 = self.retornarEstadosFuturos(matricesP)

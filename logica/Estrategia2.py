@@ -7,9 +7,9 @@ import time
 import streamlit_agraph as stag
 
 class Estrategia2:
-    def estrategia2(self, c1, c2, estadoActual, edges):
+    def estrategia2(self, c1, c2, estadoActual, edges, opcion):
         p = ProbabilidadEP()
-        matrices = p.datosMatrices()
+        matrices = p.datosMatrices(opcion)
         resultado, estados = p.generarEstadoTransicion(matrices)
         distribucionProbabilidadOriginal = p.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
         mejor_particion = []
@@ -99,10 +99,10 @@ class Estrategia2:
         df = pd.DataFrame(lista, columns=['Conjunto 1', 'Conjunto 2', 'Diferencia'])
         return df
     
-    def pintarGrafoGenerado(self, c1, c2, estadoActual, nodes, edges, Node, Edge):
+    def pintarGrafoGenerado(self, c1, c2, estadoActual, nodes, edges, Node, Edge, opcion):
         p = ProbabilidadEP()
-        mp, menorD, tiempo, lpEvaluadas, eliminadas = self.estrategia2(c1, c2, estadoActual, edges)
-        m = p.datosMatrices()
+        mp, menorD, tiempo, lpEvaluadas, eliminadas = self.estrategia2(c1, c2, estadoActual, edges, opcion)
+        m = p.datosMatrices(opcion)
         s, e = p.generarEstadoTransicion(m)
         dpo = p.generarDistribucionProbabilidades(m, c1, c2, estadoActual, e)
 

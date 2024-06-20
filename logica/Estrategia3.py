@@ -12,9 +12,9 @@ import math
 from logica.ProbabilidadEP import ProbabilidadEP
 
 class Estrategia3:
-    def datosMatriz(self):
+    def datosMatriz(self, opcion):
         p = ProbabilidadEP()
-        datos = p.datosMatrices()
+        datos = p.datosMatrices(opcion)
         return datos
     
     def generarDistribucionProbabilidades(self, tabla, estadoActual, estadoFuturo, num, estados):
@@ -85,23 +85,23 @@ class Estrategia3:
         aux(0)
         return transiciones, estados  
     
-    def retornarMejorParticion(self, c1, c2, estadoActual):
-        matrices = self.datosMatriz()
+    def retornarMejorParticion(self, c1, c2, estadoActual, opcion, factor):
+        matrices = self.datosMatriz(opcion)
         resultado, estados = self.generarEstadoTransicion(matrices)
         distribucionProbabilidadOriginal = self.generarDistribucionProbabilidades(matrices, c1, c2, estadoActual, estados)
         lista = []
         inicio = time.time()
-        particion, diferencia, tiempoo, lista = self.recocidoSimulado(matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual)
+        particion, diferencia, tiempoo, lista = self.recocidoSimulado(matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual, factor)
         fin = time.time()
         tiempo = fin - inicio
         return particion, diferencia, tiempo, lista
 
-    def recocidoSimulado(self, matrices, estados, disProbdOriginal, c1, c2, estadoActual):
+    def recocidoSimulado(self, matrices, estados, disProbdOriginal, c1, c2, estadoActual, factor):
         mejor_particion = None
         menor_diferencia = float('inf')
         listaParticionesEvaluadas = []
         temperatura = 1000
-        factor_enfriamiento = 0.85
+        factor_enfriamiento = factor
         iteraciones_por_temperatura = 2
         tiempo = 0
         
@@ -145,8 +145,8 @@ class Estrategia3:
         c2_der = list(set(c2) - set(c2_izq))
         return c1_izq, c2_izq, c1_der, c2_der
    
-    def pintarGrafoGenerado(self, c1, c2, estadoActual, nodes, edges, st):
-        particion, diferencia, tiempo, lista = self.retornarMejorParticion(c1, c2, estadoActual)
+    def pintarGrafoGenerado(self, c1, c2, estadoActual, nodes, edges, st, opcion, factor):
+        particion, diferencia, tiempo, lista = self.retornarMejorParticion(c1, c2, estadoActual, opcion, factor)
         p1, p2 = particion
         for i in p1[1]:
             if i not in p2[1]:
@@ -164,7 +164,7 @@ class Estrategia3:
         st.write('Partición: ',str(particion))
         st.write('Perdida: ', diferencia)
         st.write('Tiempo: ', tiempo)
-        #graph = stag.agraph(nodes=nodes, edges=edges, config=Gui(True))
+        graph = stag.agraph(nodes=nodes, edges=edges, config=Gui(True))
 
     def calcularEMD(self, p1, p2):
         p1 = np.array(p1)

@@ -16,7 +16,8 @@ from logica.ProbabilidadEP import ProbabilidadEP
 from logica.Estrategia2 import Estrategia2
 from logica.Estrategia3 import Estrategia3
 import random
-from logica.pruebas import PruebasEstrategias
+
+from logica.Data import Data
 
 st.set_page_config(
     page_title="Project ADA",
@@ -89,7 +90,8 @@ def main():
     probEP = ProbabilidadEP()
     estra2 = Estrategia2()
     estra3 = Estrategia3()
-    pruebas = PruebasEstrategias()
+    datosM = Data()
+
 
     bandera = False
     conexoOdisconexo = False
@@ -326,12 +328,13 @@ def main():
                     salida= parcial.mostrarParticiones2(st.session_state.nodes, st.session_state.edges)                   
                     boolParcial=True
             elif selected_option == "Primera estrategia":
-                futuros  = probEP.retornarEstadosFuturos(probEP.datosMatrices()) 
-                estados = probEP.retornarEstados(probEP.datosMatrices())
+                opcion = st.radio("Seleccione La matriz con la que desea trabajar", probEP.listaMatrices())
+                futuros  = probEP.retornarEstadosFuturos(probEP.datosMatrices(opcion)) 
+                estados = probEP.retornarEstados(probEP.datosMatrices(opcion))
                 # Permitir al usuario seleccionar los nodos
                 nodosG1 = st.multiselect("Seleccione los nodos del estado presente",estados)
                 nodosG2 = st.multiselect('Seleccione los nodos del estado futuro:', futuros)
-                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(nodosG1, nodosG2))
+                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(nodosG1, nodosG2,opcion))
                 st.session_state.nodes, st.session_state.edges = logGrafo.generar_grafoBipartito(nodosG1, nodosG2, Node, Edge)
                 
                 bandera = True
@@ -345,9 +348,10 @@ def main():
                     mostrarProbabilidad = True
                     
             elif selected_option == "Segunda estrategia":
-                c1 = st.multiselect("Seleccione los nodos del conjunto 1", probEP.retornarEstados(probEP.datosMatrices()))
-                c2 = st.multiselect("Seleccione los nodos del conjunto 2", probEP.retornarEstadosFuturos(probEP.datosMatrices()))
-                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(c1, c2))
+                opcion = st.radio("Seleccione La matriz con la que desea trabajar", probEP.listaMatrices())
+                c1 = st.multiselect("Seleccione los nodos del conjunto 1", probEP.retornarEstados(probEP.datosMatrices(opcion)))
+                c2 = st.multiselect("Seleccione los nodos del conjunto 2", probEP.retornarEstadosFuturos(probEP.datosMatrices(opcion)))
+                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(c1, c2,opcion))
                 st.session_state.nodes, st.session_state.edges = logGrafo.generar_grafoBipartito(c1, c2, Node, Edge)
                 bandera = True
                 aux3 =[]
@@ -358,9 +362,11 @@ def main():
                 if st.button("Calcular segunda estrategia"):
                     estrategia2 = True
             elif selected_option == "Tercera estrategia":
-                c11 = st.multiselect("Seleccione los nodos del conjunto 1", probEP.retornarEstados(probEP.datosMatrices()))
-                c22 = st.multiselect("Seleccione los nodos del conjunto 2", probEP.retornarEstadosFuturos(probEP.datosMatrices()))
-                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(c11, c22))
+                opcion = st.radio("Seleccione La matriz con la que desea trabajar", probEP.listaMatrices())
+                factor = st.selectbox("Seleccione el factor de enfriamiento", [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.99])
+                c11 = st.multiselect("Seleccione los nodos del conjunto 1", probEP.retornarEstados(probEP.datosMatrices(opcion)))
+                c22 = st.multiselect("Seleccione los nodos del conjunto 2", probEP.retornarEstadosFuturos(probEP.datosMatrices(opcion)))
+                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(c11, c22, opcion))
                 st.session_state.nodes, st.session_state.edges = logGrafo.generar_grafoBipartito(c11, c22, Node, Edge)
                 bandera = True
                 aux4 =[]
@@ -371,12 +377,13 @@ def main():
                 if st.button("Calcular tercera estrategia"):
                     estrategia3 = True
             elif selected_option == "Sustentación Proyecto Dany":
-                futuros  = probEP.retornarEstadosFuturos(probEP.datosMatrices()) 
-                estados = probEP.retornarEstados(probEP.datosMatrices())
+                opcion = st.radio("Seleccione La matriz con la que desea trabajar", probEP.listaMatrices())
+                futuros  = probEP.retornarEstadosFuturos(probEP.datosMatrices(opcion)) 
+                estados = probEP.retornarEstados(probEP.datosMatrices(opcion))
                 # Permitir al usuario seleccionar los nodos
                 nodosG1 = st.multiselect("Seleccione los nodos del estado presente",estados)
                 nodosG2 = st.multiselect('Seleccione los nodos del estado futuro:', futuros)
-                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(nodosG1, nodosG2))
+                estadoActual = st.selectbox("Seleccione el estado actual", probEP.retornarValorActual(nodosG1, nodosG2, opcion))
                 st.session_state.nodes, st.session_state.edges = logGrafo.generar_grafoBipartito(nodosG1, nodosG2, Node, Edge)
                 candidato = st.multiselect("Seleccione los nodos del sistema candidato", estados)
                 bandera = True
@@ -443,7 +450,7 @@ def main():
             
         
         if mostrarProbabilidad:
-            aux = probEP.retornarDistribucion(nodosG1, nodosG2, estadoActual)
+            aux = probEP.retornarDistribucion(nodosG1, nodosG2, estadoActual,opcion)
             # Convierte las listas a cadenas
             nodosG1_str = ', '.join(nodosG1)
             aux2_str = ', '.join(nodosG2)
@@ -455,44 +462,44 @@ def main():
             #df, particiones  = probEP.generarParticiones(nodosG1, nodosG2, estadoActual, candidato)
             #st.table(df)
             st.header("Mejor particion estrategia 1")
-            particion, d, tiempo, lista = probEP.retornarMejorParticionE1(nodosG1, nodosG2, estadoActual)
+            particion, d, tiempo, lista = probEP.retornarMejorParticionE1(nodosG1, nodosG2, estadoActual, opcion)
             st.write('Partición: ',str(particion))
             st.write('Perdida: ', d)
             st.write('Tiempo: ', tiempo)
-            #probEP.pintarGrafoGeneradoE1(nodosG1, nodosG2,estadoActual, st.session_state.nodes, st.session_state.edges)
-            #tablapruebas = pruebas.calcularPrueba(nodosG1, nodosG2, estadoActual, st.session_state.edges)
-            #st.table(tablapruebas)
+            probEP.pintarGrafoGeneradoE1(nodosG1, nodosG2,estadoActual, st.session_state.nodes, st.session_state.edges, opcion)
+          
             
         if estrategia2:
-            aux = probEP.retornarDistribucion(c1, c2, estadoActual)
+            aux = probEP.retornarDistribucion(c1, c2, estadoActual,opcion)
             st.header("Distribución de probabilidad")
             st.table(aux)
             st.header("Mejor particion estrategia 2")
-            particionn, diferencia, tiempo, lista,l = estra2.estrategia2(c1, c2, estadoActual, st.session_state.edges)
+            particionn, diferencia, tiempo, lista,l = estra2.estrategia2(c1, c2, estadoActual, st.session_state.edges,opcion)
             st.write('Partición: ',str(particionn))
             st.write('Perdida: ', diferencia)
             st.write('Tiempo: ', tiempo)
             #st.header("Particiones del grafo")
             #df  = estra2.generarParticiones(c1, c2, estadoActual, st.session_state.edges)
-            #estra2.pintarGrafoGenerado(c1, c2,estadoActual, st.session_state.nodes, st.session_state.edges,Node, Edge)
+            estra2.pintarGrafoGenerado(c1, c2,estadoActual, st.session_state.nodes, st.session_state.edges,Node, Edge,opcion)
             #st.table(df)
         if estrategia3:
             st.header("Mejor particion estrategia 3")
-            estra3.pintarGrafoGenerado(c11, c22,estadoActual, st.session_state.nodes, st.session_state.edges,st)
+            estra3.pintarGrafoGenerado(c11, c22,estadoActual, st.session_state.nodes, st.session_state.edges,st, opcion, factor)
         
         if mostrarSustentacion:
-            aux = probEP.retornarDistribucion(nodosG1, nodosG2, estadoActual)
+            aux = probEP.retornarDistribucionSustentacion(nodosG1, nodosG2, estadoActual, candidato, opcion)
             # Convierte las listas a cadenas
             nodosG1_str = ', '.join(nodosG1)
             aux2_str = ', '.join(nodosG2)
             # Muestra la fórmula de probabilidad condicional con los valores de las variables
+            st.header("Distriución de probabilidad original")
             st.latex(r'P(\{' + aux2_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
-            st.header("Distribución de probabilidad")
+            st.header("Distribución de probabilidad despues de elegir el candidato")
             st.table(aux)
             st.header("Mejor particion Sustentación Proyecto")
-            particion, d, tiempo, lista = probEP.retornarMejorParticion(nodosG1, nodosG2, estadoActual, candidato)
+            particion, d, tiempo, lista = probEP.retornarMejorParticion(nodosG1, nodosG2, estadoActual, candidato,opcion)
             st.write(str(particion), d)
-            probEP.pintarGrafoGenerado(nodosG1, nodosG2,estadoActual, st.session_state.edges,candidato,Node, Edge)
+            probEP.pintarGrafoGenerado(nodosG1, nodosG2,estadoActual, st.session_state.edges,candidato,Node, Edge,opcion)
             
            
             
