@@ -100,6 +100,7 @@ def main():
     estrategia2 = False
     estrategia3 = False
     mostrarSustentacion = False
+    edit = False
     salida = {}
     with st.sidebar:
         st.session_state.directed = None
@@ -242,50 +243,56 @@ def main():
 
         
         if selected == "Editar":
-            selected_option = st.selectbox(
-                "Seleccionar opción:",
-                [" ", "Nodo", "Arista"]
-            )
+            edit = True
+            if st.session_state is None:
+                selected_option = st.selectbox(
+                    "Seleccionar opción:",
+                    [" ", "Nodo", "Arista"]
+                )
+                logGrafo.guardarEstadoAntesDeCambio(st.session_state.nodes, st.session_state.edges)
+                if selected_option == "Nodo":
+                    st.sidebar.header("Nodos")
+                    st.header("Agregar Nodo")
+                    logNodo.agregarNodo(Node, st)
+                    st.header("Cambiar Etiqueta Nodo")
+                    logNodo.cambiarEtiquetaNodo(st)
+                    st.header("Cambiar Color Nodo")
+                    logNodo.cambiarColorNodo(st)
+                    st.header("Eliminar Nodo")
+                    logNodo.eliminarNodo(st)
+                    hizoCambio = True
+                if selected_option == "Arista":
+                    st.sidebar.header("Aristas")
+                    #listaEstadoAnterior=logGrafo.guardarEstadoAntesDeCambio(st.session_state.nodes, st.session_state.edges)
+                    st.header("Agregar Arista")
+                    if st.session_state.directed:  # Si el grafo es dirigido
+                        bandera=True
+                        logArista.agregarArista(Edge, True, st)  # Establece la dirección en True
+                        cambio = True
+                        
+                    else:
+                        logArista.agregarArista(Edge, False, st)
+                        cambio = True
+                    st.header("Cambiar Peso Arista")
+                    logArista.cambiarPesoArista(st)
+                    cambio = True
+                    st.header("Cambiar Color Arista")
+                    logArista.cambiarColorArista(st)
+                    cambio = True
+                    st.header("Eliminar Arista")
+                    logArista.eliminarArista(st)
+                    cambio = True
+            else:
+                st.warning("No se ha cargado ningún archivo.")
             #=======================Seccion de nodos=======================
             
             
-            logGrafo.guardarEstadoAntesDeCambio(st.session_state.nodes, st.session_state.edges)
-            if selected_option == "Nodo":
-                st.sidebar.header("Nodos")
-                st.header("Agregar Nodo")
-                logNodo.agregarNodo(Node, st)
-                st.header("Cambiar Etiqueta Nodo")
-                logNodo.cambiarEtiquetaNodo(st)
-                st.header("Cambiar Color Nodo")
-                logNodo.cambiarColorNodo(st)
-                st.header("Eliminar Nodo")
-                logNodo.eliminarNodo(st)
-                hizoCambio = True
+            
                 
              
                  
             #=======================Seccion de arcos=======================
-            if selected_option == "Arista":
-                st.sidebar.header("Aristas")
-                #listaEstadoAnterior=logGrafo.guardarEstadoAntesDeCambio(st.session_state.nodes, st.session_state.edges)
-                st.header("Agregar Arista")
-                if st.session_state.directed:  # Si el grafo es dirigido
-                    bandera=True
-                    logArista.agregarArista(Edge, True, st)  # Establece la dirección en True
-                    cambio = True
-                    
-                else:
-                    logArista.agregarArista(Edge, False, st)
-                    cambio = True
-                st.header("Cambiar Peso Arista")
-                logArista.cambiarPesoArista(st)
-                cambio = True
-                st.header("Cambiar Color Arista")
-                logArista.cambiarColorArista(st)
-                cambio = True
-                st.header("Eliminar Arista")
-                logArista.eliminarArista(st)
-                cambio = True
+            
             
                 
    
